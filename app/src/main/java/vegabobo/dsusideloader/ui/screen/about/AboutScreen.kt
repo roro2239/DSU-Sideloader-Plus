@@ -1,6 +1,7 @@
 package vegabobo.dsusideloader.ui.screen.about
 
 import android.widget.Toast
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
@@ -16,9 +17,8 @@ import kotlinx.coroutines.flow.collectLatest
 import vegabobo.dsusideloader.R
 import vegabobo.dsusideloader.ui.cards.updater.UpdaterCard
 import vegabobo.dsusideloader.ui.components.ApplicationScreen
-import vegabobo.dsusideloader.ui.components.PreferenceItem
-import vegabobo.dsusideloader.ui.components.SimpleCard
-import vegabobo.dsusideloader.ui.components.Title
+import vegabobo.dsusideloader.ui.components.SettingsItem
+import vegabobo.dsusideloader.ui.components.SplicedColumnGroup
 import vegabobo.dsusideloader.ui.components.TopBar
 import vegabobo.dsusideloader.ui.screen.Destinations
 import vegabobo.dsusideloader.util.collectAsStateWithLifecycle
@@ -39,6 +39,7 @@ fun AboutScreen(
     val uiState by aboutViewModel.uiState.collectAsStateWithLifecycle()
     val uriHandler = LocalUriHandler.current
     val context = LocalContext.current
+    val translators = stringResource(id = R.string.translators_list)
 
     LaunchedEffect(Unit) {
         aboutViewModel.resetDeveloperOptionsCounter()
@@ -64,7 +65,8 @@ fun AboutScreen(
     }
 
     ApplicationScreen(
-        modifier = Modifier.padding(start = 10.dp, end = 10.dp),
+        modifier = Modifier.padding(horizontal = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
         topBar = {
             TopBar(
                 barTitle = stringResource(id = R.string.about),
@@ -81,53 +83,51 @@ fun AboutScreen(
             onClickDownloadUpdate = { aboutViewModel.onClickDownloadUpdate() },
             onClickViewChangelog = { uriHandler.openUri(aboutViewModel.response.changelogUrl) },
         )
-        Title(
-            stringResource(id = R.string.application),
-            modifier = Modifier.padding(top = 2.dp, bottom = 2.dp),
-        )
-        SimpleCard(
-            addPadding = false,
-        ) {
-            PreferenceItem(
-                title = stringResource(id = R.string.github_repo),
-                description = stringResource(id = R.string.github_repo_description),
-                onClick = { uriHandler.openUri(AboutLinks.REPOSITORY_URL) },
-            )
-            PreferenceItem(
-                title = stringResource(id = R.string.libraries_title),
-                description = stringResource(id = R.string.libraries_description),
-                onClick = { navigate(Destinations.Libraries) },
-            )
-        }
-        Title(
-            stringResource(id = R.string.collaborators),
-            modifier = Modifier.padding(top = 2.dp, bottom = 2.dp),
-        )
-        SimpleCard(
-            addPadding = false,
-        ) {
-            PreferenceItem(
-                title = "VegaBobo",
-                description = stringResource(id = R.string.role_developer),
-                onClick = { uriHandler.openUri(AboutLinks.VEGABOBO_GITHUB) },
-            )
-            PreferenceItem(
-                title = "WSTxda",
-                description = stringResource(id = R.string.role_design_icon),
-                onClick = { uriHandler.openUri(AboutLinks.WSTXDA_GITHUB) },
-            )
-            val translators = stringResource(id = R.string.translators_list)
-            if (translators.isNotEmpty() && translators != "translators_list") {
-                PreferenceItem(
-                    title = stringResource(id = R.string.translators_title),
-                    description = stringResource(id = R.string.translators_list),
+        SplicedColumnGroup(title = stringResource(id = R.string.application)) {
+            item {
+                SettingsItem(
+                    title = stringResource(id = R.string.github_repo),
+                    summary = stringResource(id = R.string.github_repo_description),
+                    onClick = { uriHandler.openUri(AboutLinks.REPOSITORY_URL) },
                 )
             }
-            PreferenceItem(
-                title = stringResource(id = R.string.contributors_title),
-                description = stringResource(id = R.string.contributors_text),
-                onClick = { uriHandler.openUri(AboutLinks.CONTRIBUTORS_URL) },
-            )
+            item {
+                SettingsItem(
+                    title = stringResource(id = R.string.libraries_title),
+                    summary = stringResource(id = R.string.libraries_description),
+                    onClick = { navigate(Destinations.Libraries) },
+                )
+            }
+        }
+        SplicedColumnGroup(title = stringResource(id = R.string.collaborators)) {
+            item {
+                SettingsItem(
+                    title = "VegaBobo",
+                    summary = stringResource(id = R.string.role_developer),
+                    onClick = { uriHandler.openUri(AboutLinks.VEGABOBO_GITHUB) },
+                )
+            }
+            item {
+                SettingsItem(
+                    title = "WSTxda",
+                    summary = stringResource(id = R.string.role_design_icon),
+                    onClick = { uriHandler.openUri(AboutLinks.WSTXDA_GITHUB) },
+                )
+            }
+            item(visible = translators.isNotEmpty() && translators != "translators_list") {
+                SettingsItem(
+                    title = stringResource(id = R.string.translators_title),
+                    summary = translators,
+                    onClick = null
+                )
+            }
+            item {
+                SettingsItem(
+                    title = stringResource(id = R.string.contributors_title),
+                    summary = stringResource(id = R.string.contributors_text),
+                    onClick = { uriHandler.openUri(AboutLinks.CONTRIBUTORS_URL) },
+                )
+            }
         }
     }
 }

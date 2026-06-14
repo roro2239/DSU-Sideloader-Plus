@@ -36,4 +36,18 @@ interface IPrivilegedService {
     boolean setAshmem(in ParcelFileDescriptor fd, long size) = 4012;
     boolean submitFromAshmem(long bytes) = 4013;
     long suggestScratchSize() = 4014;
+
+    // GSI backing images
+    List<String> getInstalledDsuSlots() = 4015;
+    String getActiveDsuSlot() = 4016;
+    String getInstalledGsiImageDir() = 4017;
+    List<String> getDsuBackingImages(String prefix) = 4018;
+    String deleteDsuBackingImage(String prefix, String imageName) = 4019;
+    String replaceDsuBackingImage(
+            String prefix,
+            String imageName,
+            in ParcelFileDescriptor imageFd,
+            long imageSize,
+            boolean readOnly
+    ) = 4020;
 }

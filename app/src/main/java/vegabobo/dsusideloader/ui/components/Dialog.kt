@@ -15,6 +15,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import vegabobo.dsusideloader.ui.theme.AppShape
 
 @Composable
 fun Dialog(
@@ -30,6 +31,7 @@ fun Dialog(
 ) {
     AlertDialog(
         modifier = modifier,
+        shape = AppShape.large,
         icon = { Icon(icon, "icon") },
         onDismissRequest = onClickCancel,
         confirmButton = {

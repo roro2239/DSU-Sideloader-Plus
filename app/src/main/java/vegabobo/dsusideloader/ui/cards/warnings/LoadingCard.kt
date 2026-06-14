@@ -8,13 +8,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import vegabobo.dsusideloader.R
-import vegabobo.dsusideloader.ui.components.SimpleCard
 
 @Composable
 fun GrantingPermissionCard() {
-    SimpleCard(
+    WarningCard(
         modifier = Modifier.fillMaxWidth(),
-        cardTitle = stringResource(id = R.string.missing_permission),
+        title = stringResource(id = R.string.missing_permission),
         text = stringResource(id = R.string.granting_permission),
     ) {
         LinearProgressIndicator(

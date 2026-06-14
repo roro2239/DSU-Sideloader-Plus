@@ -1,13 +1,14 @@
 package vegabobo.dsusideloader.ui.components.buttons
 
+import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import vegabobo.dsusideloader.ui.theme.AppShape
 
 @Composable
 fun ActionButton(
@@ -21,25 +22,30 @@ fun ActionButton(
     content: @Composable () -> Unit = {},
 ) {
     if (textButton) {
-        TextButton(onClick = onClick) {
+        TextButton(
+            onClick = onClick,
+            enabled = isEnabled,
+            shape = AppShape.SplicedGroup.single,
+        ) {
             Text(text = text)
         }
     } else {
-        FilledTonalButton(
+        Button(
             modifier = modifier,
             onClick = onClick,
             enabled = isEnabled,
+            shape = AppShape.SplicedGroup.single,
             colors =
             if (colorButton != null) {
-                ButtonDefaults.buttonColors(colorButton)
+                ButtonDefaults.buttonColors(
+                    containerColor = colorButton,
+                    contentColor = colorText ?: MaterialTheme.colorScheme.onPrimary
+                )
             } else {
                 ButtonDefaults.buttonColors()
             },
         ) {
-            Text(
-                text = text,
-                color = colorText ?: MaterialTheme.colorScheme.surface,
-            )
+            Text(text = text)
             content()
         }
     }

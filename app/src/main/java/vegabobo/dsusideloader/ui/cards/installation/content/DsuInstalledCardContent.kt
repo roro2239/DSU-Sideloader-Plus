@@ -1,97 +1,112 @@
 package vegabobo.dsusideloader.ui.cards.installation.content
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.DeleteForever
+import androidx.compose.material.icons.outlined.Inventory2
+import androidx.compose.material.icons.outlined.PowerSettingsNew
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import vegabobo.dsusideloader.R
-import vegabobo.dsusideloader.ui.components.FileSelectionBox
-import vegabobo.dsusideloader.ui.components.buttons.ErrorButton
+import vegabobo.dsusideloader.ui.components.SettingsItem
 import vegabobo.dsusideloader.ui.components.buttons.PrimaryButton
-import vegabobo.dsusideloader.ui.components.buttons.SecondaryButton
-import vegabobo.dsusideloader.ui.screen.home.InstallationCardState
 
 @Composable
 fun DsuInstalledCardContent(
-    textFieldInteraction: MutableInteractionSource,
-    uiState: InstallationCardState,
-    onClickClear: () -> Unit,
     onClickInstall: () -> Unit,
+    onClickManageImages: () -> Unit,
     onClickRebootToDynOS: () -> Unit,
     onClickDiscardDsu: () -> Unit,
 ) {
-    // Message indicating DSU is already installed
-    Text(
-        text = stringResource(R.string.dsu_already_installed),
-        style = MaterialTheme.typography.bodyLarge,
+    SettingsItem(
+        title = stringResource(R.string.installation),
+        summary = stringResource(R.string.dsu_already_installed),
+        onClick = onClickInstall,
+        rowTrailingContent = {
+            PrimaryButton(
+                modifier = Modifier.height(36.dp),
+                text = stringResource(R.string.update),
+                onClick = onClickInstall,
+            )
+        }
+    )
+
+    CardButton(
+        modifier = Modifier,
+        icon = Icons.Outlined.Inventory2,
+        text = stringResource(id = R.string.manage_dsu_images),
         color = MaterialTheme.colorScheme.primary,
-        modifier = Modifier.padding(bottom = 8.dp),
+        onClick = onClickManageImages,
     )
-    
-    // File selection box (same as NotInstallingCardContent)
-    FileSelectionBox(
-        textFieldInteraction = textFieldInteraction,
-        isEnabled = uiState.isTextFieldEnabled,
-        isError = uiState.isError,
-        isReadOnly = true,
-        textFieldValue = uiState.text,
-        textFieldTitle = stringResource(id = R.string.select_gsi_info),
+    CardButton(
+        modifier = Modifier,
+        icon = Icons.Outlined.PowerSettingsNew,
+        text = stringResource(id = R.string.reboot_into_dsu),
+        color = MaterialTheme.colorScheme.secondary,
+        onClick = onClickRebootToDynOS,
     )
-    Spacer(modifier = Modifier.padding(top = 10.dp))
-    
-    // Install/Clear buttons row
+    CardButton(
+        modifier = Modifier
+            .padding(bottom = 16.dp),
+        icon = Icons.Outlined.DeleteForever,
+        text = stringResource(id = R.string.discard),
+        color = MaterialTheme.colorScheme.error,
+        onClick = onClickDiscardDsu,
+    )
+}
+
+@Composable
+private fun CardButton(
+    modifier: Modifier,
+    icon: ImageVector,
+    text: String,
+    color: Color,
+    onClick: () -> Unit,
+) {
     Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier
+            .height(54.dp)
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(horizontal = 36.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        AnimatedVisibility(visible = uiState.isError) {
-            Text(
-                text = stringResource(id = R.string.file_unsupported),
-                modifier = Modifier.padding(start = 2.dp),
-                color = MaterialTheme.colorScheme.error,
+        Box(
+            modifier = Modifier
+                .size(36.dp)
+                .background(color.copy(alpha = 0.12f), CircleShape),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                modifier = Modifier.size(20.dp),
+                imageVector = icon,
+                contentDescription = text,
+                tint = color,
             )
         }
-        Spacer(modifier = Modifier.weight(1F))
-        if (uiState.isInstallable) {
-            SecondaryButton(
-                text = stringResource(R.string.clear),
-                onClick = onClickClear,
-            )
-            Spacer(modifier = Modifier.padding(end = 6.dp))
-        }
-        PrimaryButton(
-            text = stringResource(R.string.install),
-            onClick = onClickInstall,
-            isEnabled = uiState.isInstallable,
-        )
-    }
-    
-    Spacer(modifier = Modifier.padding(top = 8.dp))
-    
-    // Reboot and Discard buttons row
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.fillMaxWidth(),
-    ) {
-        Spacer(modifier = Modifier.weight(1F))
-        SecondaryButton(
-            text = stringResource(id = R.string.reboot_into_dsu),
-            onClick = onClickRebootToDynOS,
-        )
-        Spacer(modifier = Modifier.padding(end = 6.dp))
-        ErrorButton(
-            text = stringResource(id = R.string.discard),
-            onClick = onClickDiscardDsu,
+        Spacer(modifier = Modifier.width(12.dp))
+        Text(
+            text = text,
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurface,
         )
     }
 }

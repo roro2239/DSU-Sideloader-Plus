@@ -4,10 +4,6 @@ import vegabobo.dsusideloader.preparation.InstallationStep
 
 data class InstallationCardState(
     val installationStep: InstallationStep = InstallationStep.NOT_INSTALLING,
-    val isTextFieldEnabled: Boolean = true,
-    val isInstallable: Boolean = false,
-    val isError: Boolean = false,
-    val text: String = "",
     val errorText: String = "",
     val isProgressBarIndeterminate: Boolean = false,
     val installationProgress: Float = 0F,

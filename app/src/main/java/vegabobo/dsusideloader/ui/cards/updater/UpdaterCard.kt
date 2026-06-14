@@ -29,11 +29,10 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import vegabobo.dsusideloader.BuildConfig
 import vegabobo.dsusideloader.R
-import vegabobo.dsusideloader.ui.components.PreferenceItem
-import vegabobo.dsusideloader.ui.components.SimpleCard
+import vegabobo.dsusideloader.ui.components.SettingsItem
+import vegabobo.dsusideloader.ui.components.SplicedColumnGroup
 import vegabobo.dsusideloader.ui.components.buttons.PrimaryButton
 import vegabobo.dsusideloader.ui.components.buttons.SecondaryButton
 import vegabobo.dsusideloader.ui.screen.about.UpdateStatus
@@ -57,72 +56,72 @@ fun UpdaterCard(
     fun isUpdateFound(): Boolean =
         uiState.updateStatus == UpdateStatus.UPDATE_FOUND
 
-    SimpleCard(
-        addPadding = false,
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth(),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            Surface(
+    SplicedColumnGroup {
+        item {
+            Column(
                 modifier = Modifier
-                    .padding(10.dp)
-                    .padding(top = 16.dp),
-                color = MaterialTheme.colorScheme.inverseOnSurface,
+                    .fillMaxWidth()
+                    .padding(bottom = 20.dp),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                Box {
-                    val progressBarModifier = Modifier
-                        .size(100.dp)
-                        .align(Alignment.Center)
-                    if (isCheckingForUpdates()) {
-                        CircularProgressIndicator(modifier = progressBarModifier)
-                    }
-                    if (uiState.isDownloading) {
-                        CircularProgressIndicator(
-                            progress = { uiState.progressBar },
-                            modifier = progressBarModifier,
+                Surface(
+                    modifier = Modifier
+                        .padding(10.dp)
+                        .padding(top = 16.dp),
+                    color = MaterialTheme.colorScheme.primaryContainer,
+                    shape = CircleShape,
+                ) {
+                    Box {
+                        val progressBarModifier = Modifier
+                            .size(100.dp)
+                            .align(Alignment.Center)
+                        if (isCheckingForUpdates()) {
+                            CircularProgressIndicator(modifier = progressBarModifier)
+                        }
+                        if (uiState.isDownloading) {
+                            CircularProgressIndicator(
+                                progress = { uiState.progressBar },
+                                modifier = progressBarModifier,
+                            )
+                        }
+
+                        val selected = remember { mutableStateOf(false) }
+                        val scale = animateFloatAsState(if (selected.value) 0.75f else 1f)
+                        selected.value = isDownloading()
+                        Image(
+                            modifier = Modifier
+                                .size(96.dp)
+                                .scale(scale.value)
+                                .clip(CircleShape)
+                                .align(Alignment.Center)
+                                .clickable { onClickImage() },
+                            painter = painterResource(id = R.drawable.app_icon_mini),
+                            contentDescription = "App icon",
                         )
                     }
-
-                    val selected = remember { mutableStateOf(false) }
-                    val scale = animateFloatAsState(if (selected.value) 0.75f else 1f)
-                    selected.value = isDownloading()
-                    Image(
-                        modifier = Modifier
-                            .size(96.dp)
-                            .scale(scale.value)
-                            .clip(CircleShape)
-                            .align(Alignment.Center)
-                            .clickable { onClickImage() },
-                        painter = painterResource(id = R.drawable.app_icon_mini),
-                        contentDescription = "App icon",
-                    )
                 }
+                Text(
+                    text = stringResource(id = R.string.app_name),
+                    style = MaterialTheme.typography.titleLarge,
+                    textAlign = TextAlign.Center,
+                )
+                Text(
+                    text = stringResource(
+                        id = R.string.version_info,
+                        BuildConfig.VERSION_NAME,
+                        BuildConfig.VERSION_CODE,
+                    ),
+                    style = MaterialTheme.typography.bodyMedium,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.alpha(0.75f),
+                )
             }
-            Text(
-                text = stringResource(id = R.string.app_name),
-                fontSize = 22.sp,
-                style = MaterialTheme.typography.headlineMedium,
-                textAlign = TextAlign.Center,
-            )
-            Text(
-                text = stringResource(
-                    id = R.string.version_info,
-                    BuildConfig.VERSION_NAME,
-                    BuildConfig.VERSION_CODE,
-                ),
-                fontSize = 16.sp,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.alpha(0.75f),
-            )
         }
-        Spacer(modifier = Modifier.padding(4.dp))
-        if (isUpdaterAvailable) {
-            PreferenceItem(
+        item(visible = isUpdaterAvailable) {
+            SettingsItem(
                 title = stringResource(id = R.string.check_updates_title),
-                description =
+                summary =
                 when (uiState.updateStatus) {
                     UpdateStatus.NO_UPDATE_FOUND ->
                         stringResource(id = R.string.check_updates_text_updated)
@@ -134,27 +133,27 @@ fun UpdaterCard(
                         stringResource(id = R.string.check_updates_text_idle)
                 },
                 onClick = { onClickCheckUpdates() },
+                columnTrailingContent = {
+                    AnimatedVisibility(visible = isUpdateFound()) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 14.dp),
+                        ) {
+                            Spacer(modifier = Modifier.weight(1F))
+                            SecondaryButton(
+                                text = stringResource(id = R.string.changelog),
+                                onClick = { onClickViewChangelog() },
+                                modifier = Modifier.padding(end = 8.dp),
+                            )
+                            PrimaryButton(
+                                text = stringResource(id = R.string.download),
+                                onClick = { onClickDownloadUpdate() },
+                            )
+                        }
+                    }
+                },
             )
-            AnimatedVisibility(visible = isUpdateFound()) {
-                Row(
-                    modifier = Modifier
-                        .padding(all = 12.dp)
-                        .padding(end = 4.dp),
-                ) {
-                    Spacer(modifier = Modifier.weight(1F))
-                    SecondaryButton(
-                        text = stringResource(id = R.string.changelog),
-                        onClick = { onClickViewChangelog() },
-                        modifier = Modifier.padding(end = 8.dp),
-                    )
-                    PrimaryButton(
-                        text = stringResource(id = R.string.download),
-                        onClick = { onClickDownloadUpdate() },
-                    )
-                }
-            }
-        } else {
-            Spacer(modifier = Modifier.padding(6.dp))
         }
     }
 }

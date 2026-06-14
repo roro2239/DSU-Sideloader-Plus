@@ -29,6 +29,7 @@ import vegabobo.dsusideloader.ui.cards.warnings.StorageWarningCard
 import vegabobo.dsusideloader.ui.cards.warnings.UnlockedBootloaderCard
 import vegabobo.dsusideloader.ui.cards.warnings.UnsupportedCard
 import vegabobo.dsusideloader.ui.components.ApplicationScreen
+import vegabobo.dsusideloader.ui.components.SplicedColumnGroup
 import vegabobo.dsusideloader.ui.components.TopBar
 import vegabobo.dsusideloader.ui.screen.Destinations
 import vegabobo.dsusideloader.ui.sdialogs.CancelSheet
@@ -65,8 +66,7 @@ fun Home(
     }
 
     ApplicationScreen(
-        modifier = Modifier.padding(start = 10.dp, end = 10.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
         topBar = {
             TopBar(
                 barTitle = stringResource(id = R.string.app_name),
@@ -76,7 +76,11 @@ fun Home(
             )
         },
         content = {
-            Box(modifier = Modifier.animateContentSize()) {
+            Box(
+                modifier = Modifier
+                    .animateContentSize()
+                    .padding(horizontal = 16.dp)
+            ) {
                 when (uiState.additionalCard) {
                     AdditionalCardState.NO_DYNAMIC_PARTITIONS ->
                         UnsupportedCard(
@@ -109,40 +113,52 @@ fun Home(
                 }
             }
             if (uiState.passedInitialChecks && uiState.additionalCard == AdditionalCardState.NONE) {
-                InstallationCard(
-                    uiState = uiState.installationCard,
-                    onClickInstall = { homeViewModel.onClickInstall() },
-                    onClickUnmountSdCardAndRetry = { homeViewModel.onClickUnmountSdCardAndRetry() },
-                    onClickSetSeLinuxPermissive = { homeViewModel.onClickSetSeLinuxPermissive() },
-                    onClickRetryInstallation = { homeViewModel.onClickRetryInstallation() },
-                    onClickClear = { homeViewModel.resetInstallationCard() },
-                    onSelectFileSuccess = { homeViewModel.onFileSelectionResult(it) },
-                    onClickCancelInstallation = { homeViewModel.onClickCancel() },
-                    onClickDiscardInstalledGsiAndInstall = { homeViewModel.onClickDiscardGsiAndStartInstallation() },
-                    onClickDiscardDsu = { homeViewModel.showDiscardSheet() },
-                    onClickRebootToDynOS = { homeViewModel.onClickRebootToDynOS() },
-                    onClickViewLogs = { homeViewModel.showLogsWarning() },
-                    onClickViewCommands = { navigate(Destinations.ADBInstallation) },
-                    minPercentageOfFreeStorage = homeViewModel.allocPercentageInt.toString(),
-                )
-                UserdataCard(
-                    isEnabled = uiState.isInstalling(),
-                    uiState = uiState.userDataCard,
-                    isDsuInstalled = uiState.isDsuInstalled,
-                    onCheckedChange = { homeViewModel.onCheckUserdataCard() },
-                    onValueChange = { homeViewModel.updateUserdataSize(it) },
-                    onPreserveCheckedChange = { homeViewModel.onCheckPreserveUserdata(it) },
-                )
-                ImageSizeCard(
-                    isEnabled = uiState.isInstalling(),
-                    uiState = uiState.imageSizeCard,
-                    onCheckedChange = { homeViewModel.onCheckImageSizeCard() },
-                    onValueChange = { homeViewModel.updateImageSize(it) },
-                )
-                DsuInfoCard(
-                    onClickViewDocs = { uriHandler.openUri(HomeLinks.DSU_DOCS) },
-                    onClickLearnMore = { uriHandler.openUri(HomeLinks.DSU_LEARN_MORE) },
-                )
+                SplicedColumnGroup(
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                ) {
+                    item {
+                        InstallationCard(
+                            uiState = uiState.installationCard,
+                            onClickUnmountSdCardAndRetry = { homeViewModel.onClickUnmountSdCardAndRetry() },
+                            onClickSetSeLinuxPermissive = { homeViewModel.onClickSetSeLinuxPermissive() },
+                            onClickRetryInstallation = { homeViewModel.onClickRetryInstallation() },
+                            onClickClear = { homeViewModel.resetInstallationCard() },
+                            onSelectFileSuccess = { homeViewModel.onFileSelectionResult(it) },
+                            onClickCancelInstallation = { homeViewModel.onClickCancel() },
+                            onClickDiscardInstalledGsiAndInstall = { homeViewModel.onClickDiscardGsiAndStartInstallation() },
+                            onClickDiscardDsu = { homeViewModel.showDiscardSheet() },
+                            onClickRebootToDynOS = { homeViewModel.onClickRebootToDynOS() },
+                            onClickManageImages = { navigate(Destinations.Images) },
+                            onClickViewLogs = { homeViewModel.showLogsWarning() },
+                            onClickViewCommands = { navigate(Destinations.ADBInstallation) },
+                            minPercentageOfFreeStorage = homeViewModel.allocPercentageInt.toString(),
+                        )
+                    }
+                    item {
+                        UserdataCard(
+                            isEnabled = uiState.isInstalling(),
+                            uiState = uiState.userDataCard,
+                            isDsuInstalled = uiState.isDsuInstalled,
+                            onCheckedChange = { homeViewModel.onCheckUserdataCard() },
+                            onValueChange = { homeViewModel.updateUserdataSize(it) },
+                            onPreserveCheckedChange = { homeViewModel.onCheckPreserveUserdata(it) },
+                        )
+                    }
+                    item {
+                        ImageSizeCard(
+                            isEnabled = uiState.isInstalling(),
+                            uiState = uiState.imageSizeCard,
+                            onCheckedChange = { homeViewModel.onCheckImageSizeCard() },
+                            onValueChange = { homeViewModel.updateImageSize(it) },
+                        )
+                    }
+                    item {
+                        DsuInfoCard(
+                            onClickViewDocs = { uriHandler.openUri(HomeLinks.DSU_DOCS) },
+                            onClickLearnMore = { uriHandler.openUri(HomeLinks.DSU_LEARN_MORE) },
+                        )
+                    }
+                }
             }
         },
     )

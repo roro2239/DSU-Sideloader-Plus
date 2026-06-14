@@ -14,7 +14,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 
 @Composable
 fun DialogItem(
@@ -35,12 +34,17 @@ fun DialogItem(
         Column(Modifier.padding(4.dp)) {
             Text(
                 text = title,
-                fontSize = 12.sp,
-                color = textColor,
+                style = MaterialTheme.typography.bodySmall,
+                color = if (textColor == Color.Unspecified) {
+                    MaterialTheme.colorScheme.onSurfaceVariant
+                } else {
+                    textColor
+                },
             )
             Text(
                 color = textColor,
                 text = text,
+                style = MaterialTheme.typography.bodyLarge,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )

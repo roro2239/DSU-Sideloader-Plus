@@ -20,6 +20,13 @@
     <!-- Installation card -->
     <string name="select_gsi_info">请选择一个要安装的 GSI 文件</string>
     <string name="dsu_already_installed">已安装 DSU</string>
+    <string name="manage_dsu_images">管理镜像</string>
+    <string name="dsu_images">DSU 镜像</string>
+    <string name="installed_dsu_images">已安装的 DSU 镜像</string>
+    <string name="installed_dsu_image">已安装的 DSU 镜像</string>
+    <string name="no_installed_dsu_images">未找到已安装的 DSU 镜像。</string>
+    <string name="replace_dsu_image">替换</string>
+    <string name="delete_dsu_image">删除</string>
     <string name="selected_file">选择文件</string>
     <string name="file_unsupported">不支持的文件</string>
     <string name="clear">清理</string>
@@ -31,6 +38,10 @@
     <!-- Discard installed DSU dialog -->
     <string name="discard_dsu_question">是否移除已安装的DSU？</string>
     <string name="dsu_already_installed_warning">已安装 DSU 中的所有数据将在移除时删除，确定要移除么？</string>
+    <string name="delete_dsu_image_question">删除 DSU 镜像？</string>
+    <string name="delete_dsu_image_warning">将删除已安装的 DSU 镜像“%1$s”。这可能导致已安装的 DSU 无法启动。</string>
+    <string name="replace_dsu_image_question">是否安装替换镜像？</string>
+    <string name="replace_dsu_image_warning">所选文件将替换已安装 DSU 中的目标镜像。</string>
     <!-- Preparation -->
     <string name="decompressing_gz">正在提取 gz 文件…</string>
     <string name="decompressing_xz">正在提取 xz 文件…</string>
@@ -43,6 +54,9 @@
     <string name="creating_partition">创建 %1$s 分区</string>
     <string name="installing_partition">正在处理 %1$s 分区…</string>
     <string name="installing">正在安装…</string>
+    <string name="loading_dsu_images">正在加载 DSU 镜像…</string>
+    <string name="replacing_dsu_image">正在替换 %1$s 镜像…</string>
+    <string name="deleting_dsu_image">正在删除 %1$s 镜像…</string>
     <!-- ADB install -->
     <string name="require_adb_cmd_to_continue">准备工作已完成，您需要输入一个命令以继续安装。</string>
     <string name="see_commands">查看命令</string>
@@ -73,6 +87,7 @@
     <!-- Other errors card -->
     <string name="failed_create_partition">创建 %1$s 分区失败</string>
     <string name="unknown_error">未知错误</string>
+    <string name="dsu_image_operation_failed">DSU 镜像操作失败：%1$s</string>
     <string name="error">错误</string>
     <string name="try_again">再次尝试</string>
     <string name="view_logs">查看日志</string>

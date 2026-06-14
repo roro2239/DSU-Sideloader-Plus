@@ -27,6 +27,13 @@
     <!-- Installation card -->
     <string name="select_gsi_info">Select a file to be installed</string>
     <string name="dsu_already_installed">A DSU installation is already present.</string>
+    <string name="manage_dsu_images">Manage images</string>
+    <string name="dsu_images">DSU images</string>
+    <string name="installed_dsu_images">Installed DSU images</string>
+    <string name="installed_dsu_image">Installed DSU image</string>
+    <string name="no_installed_dsu_images">No installed DSU images were found.</string>
+    <string name="replace_dsu_image">Replace</string>
+    <string name="delete_dsu_image">Delete</string>
 
     <string name="selected_file">Selected file</string>
     <string name="file_unsupported">Unsupported file</string>
@@ -42,6 +49,10 @@
     <!-- Discard installed DSU dialog -->
     <string name="discard_dsu_question">Discard installation?</string>
     <string name="dsu_already_installed_warning">All data present in installed DSU will be DELETED after discarding, are you sure?</string>
+    <string name="delete_dsu_image_question">Delete DSU image?</string>
+    <string name="delete_dsu_image_warning">The installed DSU image "%1$s" will be deleted. This may make the installed DSU unbootable.</string>
+    <string name="replace_dsu_image_question">Install replacement image?</string>
+    <string name="replace_dsu_image_warning">The selected file will replace the target image in the installed DSU.</string>
 
     <!-- Preparation -->
     <string name="decompressing_gz">Extracting gz file…</string>
@@ -57,6 +68,9 @@
     <string name="creating_partition">Creating %1$s partition</string>
     <string name="installing_partition">Processing %1$s partition…</string>
     <string name="installing">Installing…</string>
+    <string name="loading_dsu_images">Loading DSU images…</string>
+    <string name="replacing_dsu_image">Replacing %1$s image…</string>
+    <string name="deleting_dsu_image">Deleting %1$s image…</string>
 
     <!-- ADB install -->
     <string name="require_adb_cmd_to_continue">Preparation done, a command is required to proceed with installation.</string>
@@ -97,6 +111,7 @@
     <!-- Other errors card -->
     <string name="failed_create_partition">Failed to create %1$s partition.</string>
     <string name="unknown_error">Unknown error.</string>
+    <string name="dsu_image_operation_failed">DSU image operation failed: %1$s</string>
     <string name="error">Error</string>
     <string name="try_again">Try again</string>
     <string name="view_logs">View logs</string>

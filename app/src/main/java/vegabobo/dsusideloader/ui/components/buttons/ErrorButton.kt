@@ -17,5 +17,6 @@ fun ErrorButton(
         onClick = onClick,
         isEnabled = isEnabled,
         colorButton = MaterialTheme.colorScheme.error,
+        colorText = MaterialTheme.colorScheme.onError,
     )
 }

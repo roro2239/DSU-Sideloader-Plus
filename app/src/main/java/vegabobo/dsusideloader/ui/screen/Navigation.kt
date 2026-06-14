@@ -7,11 +7,13 @@ import androidx.navigation.compose.rememberNavController
 import vegabobo.dsusideloader.ui.screen.about.AboutScreen
 import vegabobo.dsusideloader.ui.screen.adb.AdbScreen
 import vegabobo.dsusideloader.ui.screen.home.Home
+import vegabobo.dsusideloader.ui.screen.images.Images
 import vegabobo.dsusideloader.ui.screen.libraries.LibrariesScreen
 import vegabobo.dsusideloader.ui.screen.settings.Settings
 
 object Destinations {
     const val Homepage = "home"
+    const val Images = "images"
     const val Preferences = "preferences"
     const val ADBInstallation = "adb_installation"
     const val About = "about"
@@ -32,6 +34,7 @@ fun Navigation() {
         }
 
         composable(Destinations.Homepage) { Home(navigate = { navigate(it) }) }
+        composable(Destinations.Images) { Images(navigate = { navigate(it) }) }
         composable(Destinations.Preferences) { Settings(navigate = { navigate(it) }) }
         composable(Destinations.ADBInstallation) { AdbScreen(navigate = { navigate(it) }) }
         composable(Destinations.About) { AboutScreen(navigate = { navigate(it) }) }

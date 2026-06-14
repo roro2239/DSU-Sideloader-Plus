@@ -1,8 +1,5 @@
 package vegabobo.dsusideloader.ui.cards
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
@@ -13,11 +10,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import vegabobo.dsusideloader.R
-import vegabobo.dsusideloader.ui.components.CardBox
+import vegabobo.dsusideloader.ui.components.ExpandableSettingsSwitchItem
 import vegabobo.dsusideloader.ui.components.FileSelectionBox
-import vegabobo.dsusideloader.ui.components.PreferenceItem
 import vegabobo.dsusideloader.ui.screen.home.UserDataCardState
 
 @Composable
@@ -25,7 +20,6 @@ fun UserdataCard(
     isEnabled: Boolean,
     uiState: UserDataCardState,
     isDsuInstalled: Boolean,
-    modifier: Modifier = Modifier,
     onValueChange: (String) -> Unit,
     onCheckedChange: (Boolean) -> Unit = {},
     onPreserveCheckedChange: (Boolean) -> Unit = {},
@@ -35,89 +29,74 @@ fun UserdataCard(
     // So !isEnabled means installation is NOT in progress
     if (isDsuInstalled && !isEnabled) {
         // When DSU is installed, show a simpler card with preserve option
-        CardBox(
-            modifier = modifier,
-            cardTitle = stringResource(id = R.string.userdata_size),
-            addToggle = false,
+        ExpandableSettingsSwitchItem(
+            title = stringResource(id = R.string.preserve_userdata),
+            summary = stringResource(id = R.string.preserve_userdata_desc),
+            checked = uiState.preserveSelected,
+            onCheckedChange = onPreserveCheckedChange,
+            expanded = !uiState.preserveSelected,
+            onExpandedChange = { expanded -> onPreserveCheckedChange(!expanded) },
         ) {
-            Column {
-                // Preserve userdata toggle (default: ON)
-                PreferenceItem(
-                    title = stringResource(id = R.string.preserve_userdata),
-                    description = stringResource(id = R.string.preserve_userdata_desc),
-                    showToggle = true,
-                    isChecked = uiState.preserveSelected,
+            Column(modifier = Modifier.padding(horizontal = 36.dp)) {
+                UserdataSizeInput(
                     isEnabled = !isEnabled,
-                    onClick = { onPreserveCheckedChange(!uiState.preserveSelected) }
+                    uiState = uiState,
+                    onValueChange = onValueChange,
+                    modifier = Modifier.padding(bottom = 20.dp),
                 )
-                
-                // Show userdata size input only when preserve is OFF
-                AnimatedVisibility(visible = !uiState.preserveSelected) {
-                    Column {
-                        FileSelectionBox(
-                            modifier = Modifier.padding(top = 8.dp, bottom = 4.dp),
-                            isEnabled = !isEnabled,
-                            isError = uiState.isError,
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                            textFieldValue = uiState.text,
-                            textFieldTitle = stringResource(id = R.string.userdata_size_info),
-                            onValueChange = onValueChange,
-                        )
-                        AnimatedVisibility(visible = uiState.isError) {
-                            Text(
-                                modifier = Modifier.padding(start = 1.dp),
-                                text = stringResource(
-                                    id = R.string.allowed_userdata_allocation,
-                                    uiState.maximumAllowed,
-                                ),
-                                color = MaterialTheme.colorScheme.error,
-                                lineHeight = 14.sp,
-                                fontSize = 14.sp,
-                            )
-                        }
-                    }
-                }
             }
         }
     } else {
         // Normal userdata card when DSU is not installed
-        CardBox(
-            modifier = modifier,
-            cardTitle = stringResource(id = R.string.userdata_size),
-            addToggle = true,
-            isToggleEnabled = !isEnabled,
-            isToggleChecked = uiState.isSelected,
+        ExpandableSettingsSwitchItem(
+            title = stringResource(id = R.string.userdata_size),
+            checked = uiState.isSelected,
             onCheckedChange = onCheckedChange,
-        ) {
-            AnimatedVisibility(
-                visible = uiState.isSelected,
-                enter = expandVertically(),
-                exit = shrinkVertically(),
-            ) {
-                Column {
-                    FileSelectionBox(
-                        modifier = Modifier.padding(bottom = 4.dp),
-                        isEnabled = !isEnabled,
-                        isError = uiState.isError,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        textFieldValue = uiState.text,
-                        textFieldTitle = stringResource(id = R.string.userdata_size_info),
-                        onValueChange = onValueChange,
-                    )
-                    AnimatedVisibility(visible = uiState.isError) {
-                        Text(
-                            modifier = Modifier.padding(start = 1.dp),
-                            text = stringResource(
-                                id = R.string.allowed_userdata_allocation,
-                                uiState.maximumAllowed,
-                            ),
-                            color = MaterialTheme.colorScheme.error,
-                            lineHeight = 14.sp,
-                            fontSize = 14.sp,
-                        )
-                    }
+            expanded = uiState.isSelected,
+            onExpandedChange = { expanded ->
+                if (expanded != uiState.isSelected) {
+                    onCheckedChange(expanded)
                 }
+            },
+            enabled = !isEnabled,
+        ) {
+            Column(modifier = Modifier.padding(horizontal = 36.dp)) {
+                UserdataSizeInput(
+                    isEnabled = !isEnabled,
+                    uiState = uiState,
+                    onValueChange = onValueChange,
+                    modifier = Modifier.padding(bottom = 20.dp),
+                )
             }
         }
+    }
+}
+
+@Composable
+private fun UserdataSizeInput(
+    isEnabled: Boolean,
+    uiState: UserDataCardState,
+    onValueChange: (String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    FileSelectionBox(
+        modifier = modifier,
+        isEnabled = isEnabled,
+        isError = uiState.isError,
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+        textFieldValue = uiState.text,
+        textFieldTitle = stringResource(id = R.string.userdata_size_info),
+        onValueChange = onValueChange,
+    )
+    if (uiState.isError) {
+        Text(
+            modifier = Modifier.padding(start = 1.dp),
+            text = stringResource(
+                id = R.string.allowed_userdata_allocation,
+                uiState.maximumAllowed,
+            ),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.error,
+        )
     }
 }

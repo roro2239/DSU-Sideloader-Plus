@@ -5,6 +5,8 @@ import android.content.Intent
 import android.content.pm.IPackageManager
 import android.gsi.GsiProgress
 import android.gsi.IGsiService
+import android.gsi.IImageService
+import android.gsi.MappedImage
 import android.os.Build
 import android.os.IBinder
 import android.os.ParcelFileDescriptor
@@ -14,6 +16,8 @@ import android.os.image.IDynamicSystemService
 import android.os.storage.IStorageManager
 import android.os.storage.VolumeInfo
 import android.util.Log
+import java.io.File
+import java.io.FileOutputStream
 import kotlin.system.exitProcess
 import org.lsposed.hiddenapibypass.HiddenApiBypass
 import vegabobo.dsusideloader.BuildConfig
@@ -29,10 +33,15 @@ class PrivilegedService : IPrivilegedService.Stub() {
         exitProcess(0)
     }
 
-    private fun getBinder(service: String): IBinder {
+    private fun getBinderOrNull(service: String): IBinder? {
         val serviceManager = Class.forName("android.os.ServiceManager")
         val binder = HiddenApiBypass.invoke(serviceManager, null, "getService", service)
-        return binder as IBinder
+        return binder as? IBinder
+    }
+
+    private fun getBinder(service: String): IBinder {
+        return getBinderOrNull(service)
+            ?: throw IllegalStateException("$service service returned null")
     }
 
     fun setProp(key: String, value: String) {
@@ -268,5 +277,209 @@ class PrivilegedService : IPrivilegedService.Stub() {
     override fun isInstalled(): Boolean {
         requiresDynamicSystem()
         return DYNAMIC_SYSTEM!!.isInstalled
+    }
+
+    //
+    // GSI backing image service
+    //
+
+    private var GSI_SERVICE: IGsiService? = null
+
+    private fun requiresGsiService(): IGsiService {
+        if (GSI_SERVICE == null) {
+            GSI_SERVICE = IGsiService.Stub.asInterface(getGsiServiceBinder())
+        }
+        return GSI_SERVICE!!
+    }
+
+    private fun getGsiServiceBinder(): IBinder {
+        getBinderOrNull("gsiservice")?.let { return it }
+        setProp("ctl.start", "gsid")
+
+        val deadline = System.currentTimeMillis() + 10_000L
+        while (System.currentTimeMillis() < deadline) {
+            getBinderOrNull("gsiservice")?.let { return it }
+            Thread.sleep(100L)
+        }
+        throw IllegalStateException("gsiservice is not available after starting gsid")
+    }
+
+    override fun getInstalledDsuSlots(): List<String> {
+        return requiresGsiService().getInstalledDsuSlots()
+    }
+
+    override fun getActiveDsuSlot(): String {
+        return requiresGsiService().getActiveDsuSlot()
+    }
+
+    override fun getInstalledGsiImageDir(): String {
+        return requiresGsiService().getInstalledGsiImageDir()
+    }
+
+    override fun getDsuBackingImages(prefix: String?): List<String> {
+        validateGsiPrefix(prefix)
+        return requiresGsiService()
+            .openImageService(prefix!!)
+            .getAllBackingImages()
+    }
+
+    override fun deleteDsuBackingImage(prefix: String?, imageName: String?): String {
+        return runCatching {
+            validateGsiPrefix(prefix)
+            validateGsiImageName(imageName)
+            val imageService = requiresGsiService().openImageService(prefix!!)
+            val deleted = deleteDsuBackingImage(imageService, imageName!!)
+            if (deleted) "" else "Image not found: $imageName"
+        }.getOrElse {
+            Log.e(BuildConfig.APPLICATION_ID, it.stackTraceToString())
+            it.message ?: it.toString()
+        }
+    }
+
+    override fun replaceDsuBackingImage(
+        prefix: String?,
+        imageName: String?,
+        imageFd: ParcelFileDescriptor?,
+        imageSize: Long,
+        readOnly: Boolean,
+    ): String {
+        return runCatching {
+            validateGsiPrefix(prefix)
+            validateGsiImageName(imageName)
+            requireNotNull(imageFd) { "input image fd is null" }
+
+            ensureGsiServiceDirectory("/data/gsi/$prefix")
+            ensureGsiServiceDirectory("/metadata/gsi/$prefix")
+
+            val imageService = requiresGsiService().openImageService(prefix!!)
+            replaceDsuBackingImage(imageService, imageName!!, imageFd, imageSize, readOnly)
+            ""
+        }.getOrElse {
+            Log.e(BuildConfig.APPLICATION_ID, it.stackTraceToString())
+            it.message ?: it.toString()
+        }.also {
+            runCatching { imageFd?.close() }
+        }
+    }
+
+    private fun deleteDsuBackingImage(
+        imageService: IImageService,
+        imageName: String,
+    ): Boolean {
+        if (imageService.isImageMapped(imageName)) {
+            imageService.unmapImageDevice(imageName)
+        }
+        if (!imageService.backingImageExists(imageName)) {
+            return false
+        }
+        imageService.deleteBackingImage(imageName)
+        return true
+    }
+
+    private fun replaceDsuBackingImage(
+        imageService: IImageService,
+        imageName: String,
+        imageFd: ParcelFileDescriptor,
+        imageSize: Long,
+        readOnly: Boolean,
+    ) {
+        require(imageSize > 0) { "input image is empty" }
+        require(imageSize % 512L == 0L) { "input image size must be 512-byte aligned: $imageSize" }
+
+        if (imageService.isImageMapped(imageName)) {
+            imageService.unmapImageDevice(imageName)
+        }
+        if (imageService.backingImageExists(imageName)) {
+            imageService.deleteBackingImage(imageName)
+        }
+
+        var created = false
+        var mapped = false
+        try {
+            val flags =
+                if (readOnly) IImageService.CREATE_IMAGE_READONLY else IImageService.CREATE_IMAGE_DEFAULT
+            imageService.createBackingImage(imageName, imageSize, flags, null)
+            created = true
+
+            val mappedImage = MappedImage()
+            imageService.mapImageDevice(imageName, IMAGE_SERVICE_WAIT_MS, mappedImage)
+            mapped = true
+
+            val mappedPath = mappedImage.path
+                ?: throw IllegalStateException("mapImageDevice($imageName) returned empty path")
+            copyFileToBlockDevice(imageFd, mappedPath, imageSize)
+        } catch (e: Exception) {
+            if (mapped) {
+                runCatching { imageService.unmapImageDevice(imageName) }
+            }
+            if (created) {
+                runCatching { imageService.deleteBackingImage(imageName) }
+            }
+            throw e
+        }
+
+        imageService.unmapImageDevice(imageName)
+    }
+
+    private fun copyFileToBlockDevice(
+        imageFd: ParcelFileDescriptor,
+        mappedPath: String,
+        imageSize: Long,
+    ) {
+        val buffer = ByteArray(4 * 1024 * 1024)
+        var copied = 0L
+        ParcelFileDescriptor.AutoCloseInputStream(imageFd).use { input ->
+            FileOutputStream(mappedPath).use { output ->
+                while (true) {
+                    val read = input.read(buffer)
+                    if (read < 0) {
+                        break
+                    }
+                    output.write(buffer, 0, read)
+                    copied += read.toLong()
+                }
+                output.fd.sync()
+            }
+        }
+        if (copied != imageSize) {
+            throw IllegalStateException("short copy: copied $copied of $imageSize")
+        }
+    }
+
+    private fun validateGsiPrefix(prefix: String?) {
+        require(!prefix.isNullOrBlank()) { "prefix must not be empty" }
+        require(!prefix.startsWith("/") && !prefix.contains("..")) {
+            "prefix must be relative and must not contain '..': $prefix"
+        }
+    }
+
+    private fun validateGsiImageName(imageName: String?) {
+        require(!imageName.isNullOrBlank()) { "image name must not be empty" }
+        require(!imageName.contains("/") && !imageName.contains("..")) {
+            "image name must not contain '/' or '..': $imageName"
+        }
+    }
+
+    private fun ensureGsiServiceDirectory(path: String) {
+        val directory = File(path)
+        if (!directory.exists() && !directory.mkdirs()) {
+            throw IllegalStateException("failed to create $path")
+        }
+        runCommand("/system/bin/chmod", "0755", path)
+        runCommand("/system/bin/restorecon", "-R", path)
+    }
+
+    private fun runCommand(vararg command: String) {
+        val result = ProcessBuilder(*command)
+            .redirectErrorStream(true)
+            .start()
+            .waitFor()
+        if (result != 0) {
+            throw IllegalStateException("command failed ($result): ${command.joinToString(" ")}")
+        }
+    }
+
+    private companion object {
+        const val IMAGE_SERVICE_WAIT_MS = 10_000
     }
 }

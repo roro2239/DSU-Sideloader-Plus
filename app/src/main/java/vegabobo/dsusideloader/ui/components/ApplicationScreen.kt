@@ -1,16 +1,20 @@
 package vegabobo.dsusideloader.ui.components
 
-import androidx.compose.animation.rememberSplineBasedDecay
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -23,6 +27,7 @@ import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.dp
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -37,11 +42,10 @@ fun ApplicationScreen(
     outsideContent: @Composable (PaddingValues) -> Unit = {},
     content: @Composable () -> Unit = {},
 ) {
-    val decayAnimationSpec = rememberSplineBasedDecay<Float>()
-    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(
-        flingAnimationSpec = decayAnimationSpec,
+    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(
         state = rememberTopAppBarState(),
     )
+    val layoutDirection = LocalLayoutDirection.current
 
     val scrollBehaviorModifier =
         if (enableDefaultScrollBehavior) Modifier.nestedScroll(scrollBehavior.nestedScrollConnection) else Modifier
@@ -55,25 +59,44 @@ fun ApplicationScreen(
         Scaffold(
             modifier = scrollBehaviorModifier
                 .fillMaxSize(),
+            contentWindowInsets = WindowInsets.safeDrawing,
             topBar = { topBar(scrollBehavior) },
             bottomBar = { bottomBar() },
             content = { innerPadding ->
                 val scrollModifier =
                     if (enableDefaultScrollBehavior) Modifier.verticalScroll(rememberScrollState()) else Modifier
+                val contentInsetsModifier = Modifier.padding(
+                    start = innerPadding.calculateStartPadding(layoutDirection),
+                    top = innerPadding.calculateTopPadding(),
+                    end = innerPadding.calculateEndPadding(layoutDirection),
+                )
+                val bottomInset = innerPadding.calculateBottomPadding()
                 if (columnContent) {
                     Column(
-                        modifier = modifier
-                            .padding(top = innerPadding.calculateTopPadding())
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .then(modifier)
+                            .then(contentInsetsModifier)
                             .then(scrollModifier),
                         verticalArrangement = verticalArrangement,
                     ) {
                         content()
-                        Spacer(modifier = Modifier.padding(innerPadding.calculateBottomPadding()))
+                        Spacer(modifier = Modifier.height(bottomInset))
                     }
                 } else {
-                    Surface(modifier = modifier.padding(top = innerPadding.calculateTopPadding())) {
-                        content()
-                        Spacer(modifier = Modifier.padding(innerPadding.calculateBottomPadding()))
+                    Surface(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .then(modifier)
+                            .then(contentInsetsModifier)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(bottom = bottomInset)
+                        ) {
+                            content()
+                        }
                     }
                 }
             },

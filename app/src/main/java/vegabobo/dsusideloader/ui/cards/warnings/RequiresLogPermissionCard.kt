@@ -11,7 +11,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import vegabobo.dsusideloader.R
-import vegabobo.dsusideloader.ui.components.SimpleCard
 import vegabobo.dsusideloader.ui.components.buttons.PrimaryButton
 import vegabobo.dsusideloader.ui.components.buttons.SecondaryButton
 
@@ -20,9 +19,9 @@ fun RequiresLogPermissionCard(
     onClickGrant: () -> Unit,
     onClickRefuse: () -> Unit,
 ) {
-    SimpleCard(
+    WarningCard(
         modifier = Modifier.fillMaxWidth(),
-        cardTitle = stringResource(id = R.string.missing_permission),
+        title = stringResource(id = R.string.missing_permission),
         text = stringResource(id = R.string.missing_permission_description),
     ) {
         Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.End) {

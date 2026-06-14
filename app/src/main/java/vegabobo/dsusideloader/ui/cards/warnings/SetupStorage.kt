@@ -9,7 +9,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import vegabobo.dsusideloader.R
-import vegabobo.dsusideloader.ui.components.SimpleCard
 import vegabobo.dsusideloader.ui.components.buttons.PrimaryButton
 import vegabobo.dsusideloader.ui.util.launcherAcResult
 
@@ -22,9 +21,9 @@ fun SetupStorage(
         onSetupStorageSuccess(it)
     }
 
-    SimpleCard(
+    WarningCard(
         modifier = Modifier.fillMaxWidth(),
-        cardTitle = stringResource(id = R.string.setup_storage),
+        title = stringResource(id = R.string.setup_storage),
         text = stringResource(id = R.string.setup_storage_description),
     ) {
         Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.End) {

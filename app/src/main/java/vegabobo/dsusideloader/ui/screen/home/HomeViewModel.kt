@@ -5,6 +5,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.util.Log
+import android.widget.Toast
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.lifecycle.viewModelScope
@@ -20,6 +21,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import vegabobo.dsusideloader.BuildConfig
+import vegabobo.dsusideloader.R
 import vegabobo.dsusideloader.core.BaseViewModel
 import vegabobo.dsusideloader.core.StorageManager
 import vegabobo.dsusideloader.installer.adb.AdbInstallationHandler
@@ -94,7 +96,7 @@ class HomeViewModel @Inject constructor(
             } else {
                 InstallationStep.NOT_INSTALLING
             }
-            
+
             it.copy(
                 installationCard = InstallationCardState(installationStep = installationStep),
                 sheetDisplay = SheetDisplayState.NONE,
@@ -119,11 +121,11 @@ class HomeViewModel @Inject constructor(
                 if (isInstalled) {
                     // Track DSU installation status and show update UI
                     // Set preserve userdata to true by default
-                    _uiState.update { 
+                    _uiState.update {
                         it.copy(
                             isDsuInstalled = true,
                             userDataCard = it.userDataCard.copy(preserveSelected = true)
-                        ) 
+                        )
                     }
                     updateInstallationCard { it.copy(installationStep = InstallationStep.DSU_ALREADY_INSTALLED) }
                     return@run
@@ -375,12 +377,12 @@ class HomeViewModel @Inject constructor(
             forceStopPackage("com.android.dynsystem")
             dismissSheet()
             // Reset UI state after discarding DSU
-            _uiState.update { 
+            _uiState.update {
                 it.copy(
                     installationCard = InstallationCardState(),
                     sheetDisplay = SheetDisplayState.NONE,
                     isDsuInstalled = false,
-                ) 
+                )
             }
         }
     }
@@ -494,23 +496,15 @@ class HomeViewModel @Inject constructor(
         Log.d(tag, "isFileSupported: $isFileSupported, extension: $extension, filename: $filename")
 
         if (!isFileSupported) {
-            viewModelScope.launch {
-                updateInstallationCard { it.copy(isError = true, isTextFieldEnabled = false) }
-                delay(2000)
-                updateInstallationCard { it.copy(isError = false, isTextFieldEnabled = true) }
-            }
+            Toast.makeText(application, R.string.file_unsupported, Toast.LENGTH_SHORT).show()
             return
         }
 
         session.userSelection.selectedFileName = filename
         session.userSelection.selectedFileUri = uri
-        updateInstallationCard {
-            it.copy(
-                text = filename,
-                isTextFieldEnabled = false,
-                isInstallable = true,
-            )
-        }
+        session.userSelection.setUserDataSize(uiState.value.userDataCard.text)
+        session.userSelection.setImageSize(uiState.value.imageSizeCard.text)
+        updateSheetState(SheetDisplayState.CONFIRM_INSTALLATION)
     }
 
     //

@@ -7,16 +7,14 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Icon
-import androidx.compose.material.Surface
-import androidx.compose.material.Text
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -30,11 +28,10 @@ fun BottomSheetContent(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(12.dp)
-            .clip(RoundedCornerShape(topStart = 22.dp, topEnd = 22.dp)),
+            .padding(12.dp),
     ) {
         Surface(
-            color = MaterialTheme.colorScheme.onBackground,
+            color = MaterialTheme.colorScheme.onSurface,
             shape = CircleShape,
             modifier = Modifier
                 .alpha(0.1F)
@@ -46,7 +43,7 @@ fun BottomSheetContent(
         )
         Spacer(modifier = Modifier.height(12.dp))
         Icon(
-            tint = MaterialTheme.colorScheme.onBackground,
+            tint = MaterialTheme.colorScheme.onSurface,
             imageVector = icon,
             contentDescription = "icon",
             modifier = Modifier
@@ -55,7 +52,7 @@ fun BottomSheetContent(
                 .padding(12.dp),
         )
         Text(
-            color = MaterialTheme.colorScheme.onBackground,
+            color = MaterialTheme.colorScheme.onSurface,
             text = title,
             style = MaterialTheme.typography.headlineSmall,
             modifier = Modifier.fillMaxWidth(),
