@@ -1,12 +1,9 @@
-### DSU Sideloader Plus v2.03 (8)
+### DSU Sideloader Plus v1.0.0 (225)
 
-- Always enforce "settings_dynamic_system" flag when possible.
-    - May fix installation stuck for some devices
-- Write installation script to ExternalFilesDir (only adb operation mode)
-- Added developer options, enabled by doing multiple taps in application icon on about section, enables:
-    - Full logcat logging (may help diagnose installation issues)
-    - Disable storage checks (only for testing, not recommended)
-- Added unlocked bootloader warning
-- Other minor fixes and improvements
+- 在已安装DSU时
+  - 更新 DSU (来自 dingdang66686/DSU-Sideloader)
+  - **添加**/**更新**/**导出**/**移除** 指定分区镜像
+- MD3E UI
+- 中国大陆检查更新 CDN
 
-Read more at: https://github.com/yangFenTuoZi/DSU-Sideloader-Plus/releases/tag/2.03
+Read more at: https://github.com/yangFenTuoZi/DSU-Sideloader-Plus/releases/tag/1.0.0

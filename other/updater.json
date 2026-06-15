@@ -1,7 +1,7 @@
 {
   "identifier":"dsu_sideloader_plus",
-  "versionCode": 8,
-  "versionName": "2.02",
-  "apkUrl": "https://github.com/yangFenTuoZi/DSU-Sideloader-Plus/releases/download/2.03/app-release.apk",
-  "changelogUrl": "https://github.com/yangFenTuoZi/DSU-Sideloader-Plus/releases/tag/2.03"
+  "versionCode": 225,
+  "versionName": "1.0.0",
+  "apkUrl": "https://github.com/yangFenTuoZi/DSU-Sideloader-Plus/releases/download/1.0.0/app-release.apk",
+  "changelogUrl": "https://github.com/yangFenTuoZi/DSU-Sideloader-Plus/releases/tag/1.0.0"
 }
