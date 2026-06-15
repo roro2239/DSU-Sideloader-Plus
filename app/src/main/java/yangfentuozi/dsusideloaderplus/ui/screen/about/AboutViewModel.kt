@@ -23,6 +23,7 @@ import kotlinx.serialization.json.Json
 import yangfentuozi.dsusideloaderplus.BuildConfig
 import yangfentuozi.dsusideloaderplus.core.BaseViewModel
 import yangfentuozi.dsusideloaderplus.preferences.AppPrefs
+import yangfentuozi.dsusideloaderplus.util.GitHubRequestUtil
 import yangfentuozi.dsusideloaderplus.util.isBuildSignedByAuthor
 
 @Serializable
@@ -44,6 +45,7 @@ class AboutViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(AboutScreenUiState())
     val uiState: StateFlow<AboutScreenUiState> = _uiState.asStateFlow()
     var response = UpdaterResponse()
+    private var updateProxyBaseUrl: String? = null
 
     var developerOptionsCounter = 0
 
@@ -64,12 +66,27 @@ class AboutViewModel @Inject constructor(
         updateUpdaterCard { it.copy(updateStatus = UpdateStatus.CHECKING_FOR_UPDATES) }
         viewModelScope.launch(Dispatchers.IO) {
             val apiResponse = try {
-                URL(AppPrefs.UPDATE_CHECK_URL).readText()
+                GitHubRequestUtil.requestTextWithJsDelivrFallback(
+                    resourceUrl = AppPrefs.UPDATE_CHECK_URL,
+                    description = "app update info",
+                )
             } catch (e: Exception) {
+                Log.w(tag, "Failed to fetch update info", e)
                 updateUpdaterCard { it.copy(updateStatus = UpdateStatus.NO_UPDATE_FOUND) }
                 return@launch
             }
-            response = Json.decodeFromString(UpdaterResponse.serializer(), apiResponse)
+            if (apiResponse.body.isBlank()) {
+                updateUpdaterCard { it.copy(updateStatus = UpdateStatus.NO_UPDATE_FOUND) }
+                return@launch
+            }
+            response = try {
+                Json.decodeFromString(UpdaterResponse.serializer(), apiResponse.body)
+            } catch (e: Exception) {
+                Log.w(tag, "Failed to parse update info", e)
+                updateUpdaterCard { it.copy(updateStatus = UpdateStatus.NO_UPDATE_FOUND) }
+                return@launch
+            }
+            updateProxyBaseUrl = apiResponse.proxyBaseUrl
             updateUpdaterCard { it.copy(updateVersion = response.versionName) }
             if (response.versionCode > BuildConfig.VERSION_CODE) {
                 updateUpdaterCard { it.copy(updateStatus = UpdateStatus.UPDATE_FOUND) }
@@ -88,14 +105,15 @@ class AboutViewModel @Inject constructor(
         updateUpdaterCard { it.copy(isDownloading = true) }
         viewModelScope.launch(Dispatchers.IO) {
             val finalFile = File(application.filesDir.path + "/update.apk")
+            val apkUrl = GitHubRequestUtil.routeGithubUrl(response.apkUrl, updateProxyBaseUrl)
             val length = try {
-                URL(response.apkUrl).openConnection().contentLengthLong
+                URL(apkUrl).openConnection().contentLengthLong
             } catch (e: Exception) {
                 updateUpdaterCard { it.copy(isDownloading = false) }
                 return@launch
             }
             val input = try {
-                URL(response.apkUrl).openStream()
+                URL(apkUrl).openStream()
             } catch (e: Exception) {
                 updateUpdaterCard { it.copy(isDownloading = false) }
                 return@launch
