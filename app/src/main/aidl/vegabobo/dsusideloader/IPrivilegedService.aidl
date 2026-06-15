@@ -50,4 +50,16 @@ interface IPrivilegedService {
             long imageSize,
             boolean readOnly
     ) = 4020;
+    String addDsuBackingImage(
+            String prefix,
+            String imageName,
+            in ParcelFileDescriptor imageFd,
+            long imageSize,
+            boolean readOnly
+    ) = 4021;
+    String exportDsuBackingImage(
+            String prefix,
+            String imageName,
+            in ParcelFileDescriptor imageFd
+    ) = 4022;
 }

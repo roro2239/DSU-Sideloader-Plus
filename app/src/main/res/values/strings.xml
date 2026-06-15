@@ -32,12 +32,19 @@
     <string name="installed_dsu_images">Installed DSU images</string>
     <string name="installed_dsu_image">Installed DSU image</string>
     <string name="no_installed_dsu_images">No installed DSU images were found.</string>
+    <string name="add_dsu_image">Add DSU image</string>
+    <string name="add_dsu_image_description">Add another partition image to the installed DSU.</string>
     <string name="replace_dsu_image">Replace</string>
+    <string name="export_dsu_image">Export</string>
     <string name="delete_dsu_image">Delete</string>
+    <string name="dsu_image_name">Image name</string>
+    <string name="dsu_image_prefix">Image prefix</string>
+    <string name="dsu_image_name_error">Use a unique name with letters, numbers, dots, hyphens, or underscores.</string>
 
     <string name="selected_file">Selected file</string>
     <string name="file_unsupported">Unsupported file</string>
 
+    <string name="add">Add</string>
     <string name="clear">Clear</string>
     <string name="install">Install</string>
     <string name="update">Update</string>
@@ -51,6 +58,8 @@
     <string name="dsu_already_installed_warning">All data present in installed DSU will be DELETED after discarding, are you sure?</string>
     <string name="delete_dsu_image_question">Delete DSU image?</string>
     <string name="delete_dsu_image_warning">The installed DSU image "%1$s" will be deleted. This may make the installed DSU unbootable.</string>
+    <string name="add_dsu_image_question">Add DSU image?</string>
+    <string name="add_dsu_image_warning">The selected file will be added to the installed DSU as a new backing image.</string>
     <string name="replace_dsu_image_question">Install replacement image?</string>
     <string name="replace_dsu_image_warning">The selected file will replace the target image in the installed DSU.</string>
 
@@ -69,6 +78,8 @@
     <string name="installing_partition">Processing %1$s partition…</string>
     <string name="installing">Installing…</string>
     <string name="loading_dsu_images">Loading DSU images…</string>
+    <string name="adding_dsu_image">Adding %1$s image…</string>
+    <string name="exporting_dsu_image">Exporting %1$s image…</string>
     <string name="replacing_dsu_image">Replacing %1$s image…</string>
     <string name="deleting_dsu_image">Deleting %1$s image…</string>
 

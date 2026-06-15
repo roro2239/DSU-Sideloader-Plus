@@ -30,6 +30,7 @@ fun DialogLikeBottomSheet(
     confirmText: String = "",
     cancelText: String = "",
     hideKeyboard: Boolean = true,
+    isConfirmEnabled: Boolean = true,
     onClickConfirm: () -> Unit = {},
     onClickCancel: () -> Unit = {},
     onDismiss: () -> Unit = onClickCancel,
@@ -66,6 +67,7 @@ fun DialogLikeBottomSheet(
             PrimaryButton(
                 text = confirmText,
                 onClick = { coroutineScope.launch { it() /* Hide Sheet before confirming */; onClickConfirm() } },
+                isEnabled = isConfirmEnabled,
             )
         }
     }

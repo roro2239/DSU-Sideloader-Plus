@@ -25,10 +25,17 @@
     <string name="installed_dsu_images">已安装的 DSU 镜像</string>
     <string name="installed_dsu_image">已安装的 DSU 镜像</string>
     <string name="no_installed_dsu_images">未找到已安装的 DSU 镜像。</string>
+    <string name="add_dsu_image">新增 DSU 镜像</string>
+    <string name="add_dsu_image_description">向已安装的 DSU 新增一个分区镜像。</string>
     <string name="replace_dsu_image">替换</string>
+    <string name="export_dsu_image">导出</string>
     <string name="delete_dsu_image">删除</string>
+    <string name="dsu_image_name">镜像名称</string>
+    <string name="dsu_image_prefix">镜像前缀</string>
+    <string name="dsu_image_name_error">请使用未存在的名称，仅包含字母、数字、点、连字符或下划线。</string>
     <string name="selected_file">选择文件</string>
     <string name="file_unsupported">不支持的文件</string>
+    <string name="add">新增</string>
     <string name="clear">清理</string>
     <string name="install">安装</string>
     <string name="update">更新</string>
@@ -40,6 +47,8 @@
     <string name="dsu_already_installed_warning">已安装 DSU 中的所有数据将在移除时删除，确定要移除么？</string>
     <string name="delete_dsu_image_question">删除 DSU 镜像？</string>
     <string name="delete_dsu_image_warning">将删除已安装的 DSU 镜像“%1$s”。这可能导致已安装的 DSU 无法启动。</string>
+    <string name="add_dsu_image_question">新增 DSU 镜像？</string>
+    <string name="add_dsu_image_warning">所选文件将作为新的 backing image 添加到已安装的 DSU。</string>
     <string name="replace_dsu_image_question">是否安装替换镜像？</string>
     <string name="replace_dsu_image_warning">所选文件将替换已安装 DSU 中的目标镜像。</string>
     <!-- Preparation -->
@@ -55,6 +64,8 @@
     <string name="installing_partition">正在处理 %1$s 分区…</string>
     <string name="installing">正在安装…</string>
     <string name="loading_dsu_images">正在加载 DSU 镜像…</string>
+    <string name="adding_dsu_image">正在新增 %1$s 镜像…</string>
+    <string name="exporting_dsu_image">正在导出 %1$s 镜像…</string>
     <string name="replacing_dsu_image">正在替换 %1$s 镜像…</string>
     <string name="deleting_dsu_image">正在删除 %1$s 镜像…</string>
     <!-- ADB install -->

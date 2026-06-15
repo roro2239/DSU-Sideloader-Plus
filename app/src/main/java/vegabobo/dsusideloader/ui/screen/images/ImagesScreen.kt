@@ -1,6 +1,8 @@
 package vegabobo.dsusideloader.ui.screen.images
 
 import android.content.Intent
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -10,13 +12,23 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Archive
+import androidx.compose.material.icons.outlined.DeleteForever
 import androidx.compose.material.icons.outlined.Refresh
+import androidx.compose.material.icons.outlined.SaveAs
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -25,9 +37,10 @@ import vegabobo.dsusideloader.ui.components.ApplicationScreen
 import vegabobo.dsusideloader.ui.components.LazySplicedColumnGroup
 import vegabobo.dsusideloader.ui.components.SettingsItem
 import vegabobo.dsusideloader.ui.components.TopBar
-import vegabobo.dsusideloader.ui.components.buttons.ErrorButton
+import vegabobo.dsusideloader.ui.components.buttons.PrimaryButton
 import vegabobo.dsusideloader.ui.components.buttons.SecondaryButton
 import vegabobo.dsusideloader.ui.screen.Destinations
+import vegabobo.dsusideloader.ui.sdialogs.ConfirmDSUImageAddSheet
 import vegabobo.dsusideloader.ui.sdialogs.ConfirmDSUImageReplacementSheet
 import vegabobo.dsusideloader.ui.sdialogs.DeleteDSUImageSheet
 import vegabobo.dsusideloader.ui.util.launcherAcResult
@@ -49,6 +62,12 @@ fun Images(
     val launcherSelectReplacement = launcherAcResult {
         imagesViewModel.onReplacementFileSelectionResult(it)
     }
+    val launcherSelectNewImage = launcherAcResult {
+        imagesViewModel.onNewImageFileSelectionResult(it)
+    }
+    val launcherExportImage = launcherAcResult {
+        imagesViewModel.onExportFileSelectionResult(it)
+    }
 
     ApplicationScreen(
         enableDefaultScrollBehavior = false,
@@ -64,9 +83,13 @@ fun Images(
             )
         },
         content = {
+            val canModifyImages = uiState.operationState == ImagesOperationState.IDLE
             val items = buildList {
                 if (uiState.operationState != ImagesOperationState.IDLE) {
                     add(ImagesListItem.Operation)
+                }
+                if (uiState.availablePrefixes.isNotEmpty() || uiState.images.isNotEmpty()) {
+                    add(ImagesListItem.Add)
                 }
                 if (uiState.images.isEmpty()) {
                     add(ImagesListItem.Empty)
@@ -91,14 +114,42 @@ fun Images(
                     ImagesListItem.Empty ->
                         EmptyImagesItem()
 
+                    ImagesListItem.Add ->
+                        AddDsuImageItem(
+                            canModify = canModifyImages,
+                            onClickAdd = {
+                                if (imagesViewModel.onClickAddImage()) {
+                                    launcherSelectNewImage.launch(chooseFile)
+                                }
+                            },
+                        )
+
                     is ImagesListItem.Image ->
                         DsuImageItem(
                             image = item.image,
-                            canModify = uiState.operationState != ImagesOperationState.REPLACING &&
-                                uiState.operationState != ImagesOperationState.DELETING,
+                            canModify = canModifyImages,
                             onClickReplace = {
                                 imagesViewModel.onClickReplaceImage(it)
                                 launcherSelectReplacement.launch(chooseFile)
+                            },
+                            onClickExport = {
+                                imagesViewModel.onClickExportImage(it)
+
+                                val imageName = it.name
+                                val filename = if (imageName.endsWith(
+                                        ".img",
+                                        ignoreCase = true
+                                    )
+                                ) imageName else "$imageName.img"
+                                val intent = Intent.createChooser(
+                                    Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
+                                        addCategory(Intent.CATEGORY_OPENABLE)
+                                        type = "application/octet-stream"
+                                        putExtra(Intent.EXTRA_TITLE, filename)
+                                    },
+                                    "",
+                                )
+                                launcherExportImage.launch(intent)
                             },
                             onClickDelete = { imagesViewModel.showDeleteImageSheet(it) },
                         )
@@ -108,6 +159,17 @@ fun Images(
     )
 
     when (uiState.sheetDisplay) {
+        ImagesSheetDisplayState.CONFIRM_ADD_DSU_IMAGE ->
+            ConfirmDSUImageAddSheet(
+                prefix = uiState.pendingPrefix,
+                imageName = uiState.newImageName,
+                filename = uiState.replacementFileName,
+                isImageNameError = uiState.newImageNameError,
+                onImageNameChange = { imagesViewModel.onNewImageNameChange(it) },
+                onClickConfirm = { imagesViewModel.confirmAddImage() },
+                onClickCancel = { imagesViewModel.dismissSheet() },
+            )
+
         ImagesSheetDisplayState.CONFIRM_REPLACE_DSU_IMAGE ->
             ConfirmDSUImageReplacementSheet(
                 imageName = uiState.pendingImage?.name.orEmpty(),
@@ -138,6 +200,10 @@ private sealed class ImagesListItem {
         override val key: String = "empty"
     }
 
+    data object Add : ImagesListItem() {
+        override val key: String = "add"
+    }
+
     data class Image(val image: DsuImageState) : ImagesListItem() {
         override val key: String = "image:${image.prefix}/${image.name}"
     }
@@ -151,6 +217,12 @@ private fun ImagesOperationItem(
     val text = when (uiState.operationState) {
         ImagesOperationState.IDLE -> return
         ImagesOperationState.LOADING -> stringResource(id = R.string.loading_dsu_images)
+        ImagesOperationState.ADDING ->
+            stringResource(id = R.string.adding_dsu_image, uiState.currentImageName)
+
+        ImagesOperationState.EXPORTING ->
+            stringResource(id = R.string.exporting_dsu_image, uiState.currentImageName)
+
         ImagesOperationState.REPLACING ->
             stringResource(id = R.string.replacing_dsu_image, uiState.currentImageName)
 
@@ -190,6 +262,25 @@ private fun ImagesOperationItem(
 }
 
 @Composable
+private fun AddDsuImageItem(
+    canModify: Boolean,
+    onClickAdd: () -> Unit,
+) {
+    SettingsItem(
+        title = stringResource(id = R.string.add_dsu_image),
+        summary = stringResource(id = R.string.add_dsu_image_description),
+        onClick = null,
+        rowTrailingContent = {
+            PrimaryButton(
+                text = stringResource(id = R.string.add),
+                onClick = onClickAdd,
+                isEnabled = canModify,
+            )
+        },
+    )
+}
+
+@Composable
 private fun EmptyImagesItem() {
     SettingsItem(
         title = stringResource(id = R.string.installed_dsu_images),
@@ -203,32 +294,63 @@ private fun DsuImageItem(
     image: DsuImageState,
     canModify: Boolean,
     onClickReplace: (DsuImageState) -> Unit,
+    onClickExport: (DsuImageState) -> Unit,
     onClickDelete: (DsuImageState) -> Unit,
 ) {
     SettingsItem(
         title = image.name,
         summary = image.prefix,
         onClick = null,
-        columnTrailingContent = {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 8.dp)
-            ) {
-                SecondaryButton(
-                    modifier = Modifier.weight(1f),
-                    text = stringResource(id = R.string.replace_dsu_image),
+        rowTrailingContent = {
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                IconButtonWithBackground(
                     onClick = { onClickReplace(image) },
-                    isEnabled = canModify,
+                    imageVector = Icons.Outlined.SaveAs,
+                    contentDescription = stringResource(R.string.replace_dsu_image),
+                    color = MaterialTheme.colorScheme.primary,
+                    enabled = canModify
                 )
-                Spacer(modifier = Modifier.padding(end = 6.dp))
-                ErrorButton(
-                    modifier = Modifier.weight(1f),
-                    text = stringResource(id = R.string.delete_dsu_image),
+
+                IconButtonWithBackground(
+                    onClick = { onClickExport(image) },
+                    imageVector = Icons.Outlined.Archive,
+                    contentDescription = stringResource(R.string.export_dsu_image),
+                    color = MaterialTheme.colorScheme.secondary,
+                    enabled = canModify
+                )
+
+                IconButtonWithBackground(
                     onClick = { onClickDelete(image) },
-                    isEnabled = canModify,
+                    imageVector = Icons.Outlined.DeleteForever,
+                    contentDescription = stringResource(R.string.delete_dsu_image),
+                    color = MaterialTheme.colorScheme.error,
+                    enabled = canModify
                 )
             }
         },
     )
+}
+
+@Composable
+private fun IconButtonWithBackground(
+    imageVector: ImageVector,
+    contentDescription: String?,
+    onClick: () -> Unit,
+    enabled: Boolean = true,
+    color: Color
+) {
+    IconButton(
+        onClick = onClick,
+        enabled = enabled,
+        modifier = Modifier
+            .background(color.copy(alpha = 0.12f), CircleShape)
+            .size(32.dp),
+    ) {
+        Icon(
+            modifier = Modifier.size(18.dp),
+            imageVector = imageVector,
+            contentDescription = contentDescription,
+            tint = color,
+        )
+    }
 }

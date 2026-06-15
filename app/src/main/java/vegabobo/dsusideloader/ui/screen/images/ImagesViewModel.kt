@@ -34,6 +34,7 @@ class ImagesViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(ImagesUiState())
     val uiState: StateFlow<ImagesUiState> = _uiState.asStateFlow()
 
+    private var pendingNewImageUri: Uri = Uri.EMPTY
     private var pendingReplacementUri: Uri = Uri.EMPTY
 
     init {
@@ -74,10 +75,88 @@ class ImagesViewModel @Inject constructor(
             _uiState.update {
                 it.copy(
                     images = images,
+                    availablePrefixes = prefixes,
                     operationState = ImagesOperationState.IDLE,
                     errorText = "",
                 )
             }
+        }
+    }
+
+    fun onClickAddImage(): Boolean {
+        val prefix = getDefaultImagePrefix()
+        if (prefix.isBlank()) {
+            onImageOperationError("No installed DSU prefix found.")
+            return false
+        }
+        _uiState.update {
+            it.copy(
+                pendingPrefix = prefix,
+                newImageName = "",
+                newImageNameError = false,
+                errorText = "",
+            )
+        }
+        return true
+    }
+
+    fun onNewImageFileSelectionResult(uri: Uri) {
+        val filename = FilenameUtils.queryName(application.contentResolver, uri)
+        val extension = filename.substringAfterLast(".", "").lowercase()
+        if (extension != "img") {
+            Toast.makeText(application, R.string.file_unsupported, Toast.LENGTH_SHORT).show()
+            clearPendingSelection()
+            return
+        }
+
+        val imageName = filename.substringBeforeLast(".").trim() + "_gsi"
+        pendingNewImageUri = uri
+        _uiState.update {
+            it.copy(
+                newImageName = imageName,
+                newImageNameError = !isNewImageNameValid(imageName, it.pendingPrefix),
+                replacementFileName = filename,
+                sheetDisplay = ImagesSheetDisplayState.CONFIRM_ADD_DSU_IMAGE,
+                errorText = "",
+            )
+        }
+    }
+
+    fun onNewImageNameChange(imageName: String) {
+        _uiState.update {
+            it.copy(
+                newImageName = imageName,
+                newImageNameError = !isNewImageNameValid(imageName, it.pendingPrefix),
+            )
+        }
+    }
+
+    fun confirmAddImage() {
+        val prefix = uiState.value.pendingPrefix
+        val imageName = uiState.value.newImageName.trim()
+        if (!isNewImageNameValid(imageName, prefix)) {
+            _uiState.update { it.copy(newImageNameError = true) }
+            return
+        }
+        val uri = pendingNewImageUri
+        if (uri == Uri.EMPTY) return
+
+        dismissSheet(clearPendingSelection = false)
+        _uiState.update {
+            it.copy(
+                operationState = ImagesOperationState.ADDING,
+                currentImageName = imageName,
+                errorText = "",
+            )
+        }
+        viewModelScope.launch(Dispatchers.IO) {
+            val imageSize = storageManager.getFilesizeFromUri(uri)
+            val fd = application.contentResolver.openFileDescriptor(uri, "r")
+            if (fd == null) {
+                onImageOperationError("Unable to open image file.")
+                return@launch
+            }
+            addImage(prefix, imageName, fd, imageSize)
         }
     }
 
@@ -95,7 +174,7 @@ class ImagesViewModel @Inject constructor(
         val extension = filename.substringAfterLast(".", "").lowercase()
         if (extension != "img") {
             Toast.makeText(application, R.string.file_unsupported, Toast.LENGTH_SHORT).show()
-            clearPendingReplacement()
+            clearPendingSelection()
             return
         }
 
@@ -109,12 +188,40 @@ class ImagesViewModel @Inject constructor(
         }
     }
 
+    fun onClickExportImage(image: DsuImageState) {
+        _uiState.update {
+            it.copy(
+                pendingImage = image,
+                errorText = "",
+            )
+        }
+    }
+
+    fun onExportFileSelectionResult(uri: Uri) {
+        val image = uiState.value.pendingImage ?: return
+        _uiState.update {
+            it.copy(
+                operationState = ImagesOperationState.EXPORTING,
+                currentImageName = image.name,
+                errorText = "",
+            )
+        }
+        viewModelScope.launch(Dispatchers.IO) {
+            val fd = application.contentResolver.openFileDescriptor(uri, "wt")
+            if (fd == null) {
+                onImageOperationError("Unable to open output image file.")
+                return@launch
+            }
+            exportImage(image, fd)
+        }
+    }
+
     fun confirmReplaceImage() {
         val image = uiState.value.pendingImage ?: return
         val uri = pendingReplacementUri
         if (uri == Uri.EMPTY) return
 
-        dismissSheet(clearPendingReplacement = false)
+        dismissSheet(clearPendingSelection = false)
         _uiState.update {
             it.copy(
                 operationState = ImagesOperationState.REPLACING,
@@ -130,6 +237,61 @@ class ImagesViewModel @Inject constructor(
                 return@launch
             }
             replaceImage(image, fd, imageSize)
+        }
+    }
+
+    private fun exportImage(
+        image: DsuImageState,
+        fd: ParcelFileDescriptor,
+    ) {
+        PrivilegedProvider.run(
+            onFail = {
+                fd.close()
+                onImageOperationError("Privileged service unavailable.")
+            },
+        ) {
+            val error = try {
+                exportDsuBackingImage(image.prefix, image.name, fd)
+            } finally {
+                fd.close()
+            }
+            if (error.isEmpty()) {
+                clearPendingSelection()
+                _uiState.update {
+                    it.copy(
+                        operationState = ImagesOperationState.IDLE,
+                        errorText = "",
+                    )
+                }
+            } else {
+                onImageOperationError(error)
+            }
+        }
+    }
+
+    private fun addImage(
+        prefix: String,
+        imageName: String,
+        fd: ParcelFileDescriptor,
+        imageSize: Long,
+    ) {
+        PrivilegedProvider.run(
+            onFail = {
+                fd.close()
+                onImageOperationError("Privileged service unavailable.")
+            },
+        ) {
+            val error = try {
+                addDsuBackingImage(prefix, imageName, fd, imageSize, true)
+            } finally {
+                fd.close()
+            }
+            if (error.isEmpty()) {
+                clearPendingSelection()
+                refreshImages()
+            } else {
+                onImageOperationError(error)
+            }
         }
     }
 
@@ -150,7 +312,7 @@ class ImagesViewModel @Inject constructor(
                 fd.close()
             }
             if (error.isEmpty()) {
-                clearPendingReplacement()
+                clearPendingSelection()
                 refreshImages()
             } else {
                 onImageOperationError(error)
@@ -167,11 +329,11 @@ class ImagesViewModel @Inject constructor(
         }
     }
 
-    fun dismissSheet() = dismissSheet(clearPendingReplacement = true)
+    fun dismissSheet() = dismissSheet(clearPendingSelection = true)
 
-    private fun dismissSheet(clearPendingReplacement: Boolean) {
-        if (clearPendingReplacement) {
-            clearPendingReplacement()
+    private fun dismissSheet(clearPendingSelection: Boolean) {
+        if (clearPendingSelection) {
+            clearPendingSelection()
         }
         _uiState.update {
             it.copy(
@@ -203,7 +365,7 @@ class ImagesViewModel @Inject constructor(
     }
 
     private fun onImageOperationError(error: String) {
-        clearPendingReplacement()
+        clearPendingSelection()
         _uiState.update {
             it.copy(
                 operationState = ImagesOperationState.ERROR,
@@ -213,14 +375,33 @@ class ImagesViewModel @Inject constructor(
         }
     }
 
-    private fun clearPendingReplacement() {
+    private fun clearPendingSelection() {
+        pendingNewImageUri = Uri.EMPTY
         pendingReplacementUri = Uri.EMPTY
         _uiState.update {
             it.copy(
                 pendingImage = null,
+                pendingPrefix = "",
+                newImageName = "",
+                newImageNameError = false,
                 replacementFileName = "",
             )
         }
+    }
+
+    private fun getDefaultImagePrefix(): String {
+        return uiState.value.images.firstOrNull()?.prefix
+            ?: uiState.value.availablePrefixes.firstOrNull()
+            ?: ""
+    }
+
+    private fun isNewImageNameValid(imageName: String, prefix: String): Boolean {
+        val trimmedImageName = imageName.trim()
+        return trimmedImageName.isNotBlank() &&
+            IMAGE_NAME_REGEX.matches(trimmedImageName) &&
+            uiState.value.images.none {
+                it.prefix == prefix && it.name == trimmedImageName
+            }
     }
 
     private fun IPrivilegedService.getInstalledDsuPrefixes(): List<String> {
@@ -249,5 +430,9 @@ class ImagesViewModel @Inject constructor(
             .removePrefix("/data/gsi/")
             .trim('/')
         return if (prefix.isEmpty()) "" else "$prefix/"
+    }
+
+    private companion object {
+        val IMAGE_NAME_REGEX = Regex("[A-Za-z0-9_.-]+")
     }
 }

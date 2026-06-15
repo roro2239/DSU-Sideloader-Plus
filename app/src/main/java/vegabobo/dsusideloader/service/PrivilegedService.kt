@@ -1,5 +1,6 @@
 package vegabobo.dsusideloader.service
 
+import android.annotation.SuppressLint
 import android.app.IActivityManager
 import android.content.Intent
 import android.content.pm.IPackageManager
@@ -15,8 +16,10 @@ import android.os.SystemProperties
 import android.os.image.IDynamicSystemService
 import android.os.storage.IStorageManager
 import android.os.storage.VolumeInfo
+import android.system.Os
 import android.util.Log
 import java.io.File
+import java.io.FileInputStream
 import java.io.FileOutputStream
 import kotlin.system.exitProcess
 import org.lsposed.hiddenapibypass.HiddenApiBypass
@@ -33,6 +36,7 @@ class PrivilegedService : IPrivilegedService.Stub() {
         exitProcess(0)
     }
 
+    @SuppressLint("PrivateApi")
     private fun getBinderOrNull(service: String): IBinder? {
         val serviceManager = Class.forName("android.os.ServiceManager")
         val binder = HiddenApiBypass.invoke(serviceManager, null, "getService", service)
@@ -64,11 +68,11 @@ class PrivilegedService : IPrivilegedService.Stub() {
     // Activity Manager
     //
 
-    private var ACTIVITY_MANAGER: IActivityManager? = null
+    private var activityManager: IActivityManager? = null
 
     private fun requiresActivityManager() {
-        if (ACTIVITY_MANAGER == null) {
-            ACTIVITY_MANAGER = IActivityManager.Stub.asInterface(getBinder("activity"))
+        if (activityManager == null) {
+            activityManager = IActivityManager.Stub.asInterface(getBinder("activity"))
         }
     }
 
@@ -78,7 +82,7 @@ class PrivilegedService : IPrivilegedService.Stub() {
             if (uid == 2000 || uid == 0) "com.android.shell" else BuildConfig.APPLICATION_ID
 
         if (Build.VERSION.SDK_INT > 29) {
-            ACTIVITY_MANAGER!!.startActivityAsUserWithFeature(
+            activityManager!!.startActivityAsUserWithFeature(
                 null,
                 callerPackage,
                 null,
@@ -93,7 +97,7 @@ class PrivilegedService : IPrivilegedService.Stub() {
                 0,
             )
         } else {
-            ACTIVITY_MANAGER!!.startActivityAsUser(
+            activityManager!!.startActivityAsUser(
                 null,
                 callerPackage,
                 intent,
@@ -111,53 +115,53 @@ class PrivilegedService : IPrivilegedService.Stub() {
 
     override fun forceStopPackage(packageName: String?) {
         requiresActivityManager()
-        ACTIVITY_MANAGER!!.forceStopPackage(packageName, 0)
+        activityManager!!.forceStopPackage(packageName, 0)
     }
 
     //
     // Package Manager
     //
 
-    private var PACKAGE_MANAGER: IPackageManager? = null
+    private var packageManager: IPackageManager? = null
 
     private fun requiresPackageManager() {
-        if (PACKAGE_MANAGER == null) {
-            PACKAGE_MANAGER = IPackageManager.Stub.asInterface(getBinder("package"))
+        if (packageManager == null) {
+            packageManager = IPackageManager.Stub.asInterface(getBinder("package"))
         }
     }
 
     override fun grantPermission(permissionName: String?) {
         requiresPackageManager()
-        PACKAGE_MANAGER!!.grantRuntimePermission(BuildConfig.APPLICATION_ID, permissionName, 0)
+        packageManager!!.grantRuntimePermission(BuildConfig.APPLICATION_ID, permissionName, 0)
     }
 
     //
     // Storage Manager
     //
 
-    private var STORAGE_MANAGER: IStorageManager? = null
+    private var storageManager: IStorageManager? = null
 
     private fun requiresStorageManager() {
-        if (STORAGE_MANAGER == null) {
-            STORAGE_MANAGER = IStorageManager.Stub.asInterface(getBinder("mount"))
+        if (storageManager == null) {
+            storageManager = IStorageManager.Stub.asInterface(getBinder("mount"))
         }
     }
 
     override fun getVolumes(): List<VolumeInfo> {
         requiresStorageManager()
         val vols = ArrayList<VolumeInfo>()
-        vols.addAll(STORAGE_MANAGER!!.getVolumes(0))
+        vols.addAll(storageManager!!.getVolumes(0))
         return vols
     }
 
     override fun unmount(volId: String?) {
         requiresStorageManager()
-        STORAGE_MANAGER!!.unmount(volId)
+        storageManager!!.unmount(volId)
     }
 
     override fun mount(volId: String?) {
         requiresStorageManager()
-        STORAGE_MANAGER!!.mount(volId)
+        storageManager!!.mount(volId)
     }
 
     /**
@@ -172,11 +176,11 @@ class PrivilegedService : IPrivilegedService.Stub() {
      * that has MANAGE_DYNAMIC_SYSTEM permission, shell has only INSTALL_DYNAMIC_SYSTEM
      */
 
-    private var DYNAMIC_SYSTEM: IDynamicSystemService? = null
+    private var dynamicSystemService: IDynamicSystemService? = null
 
     private fun requiresDynamicSystem() {
-        if (DYNAMIC_SYSTEM == null) {
-            DYNAMIC_SYSTEM = IDynamicSystemService.Stub.asInterface(getBinder("dynamic_system"))
+        if (dynamicSystemService == null) {
+            dynamicSystemService = IDynamicSystemService.Stub.asInterface(getBinder("dynamic_system"))
         }
     }
 
@@ -188,49 +192,49 @@ class PrivilegedService : IPrivilegedService.Stub() {
             return true
         }
         requiresDynamicSystem()
-        return DYNAMIC_SYSTEM!!.closePartition()
+        return dynamicSystemService!!.closePartition()
     }
 
     // REQUIRES MANAGE_DYNAMIC_SYSTEM
     override fun finishInstallation(): Boolean {
         requiresDynamicSystem()
-        return DYNAMIC_SYSTEM!!.finishInstallation()
+        return dynamicSystemService!!.finishInstallation()
     }
 
     // REQUIRES MANAGE_DYNAMIC_SYSTEM
     override fun getInstallationProgress(): GsiProgress? {
         requiresDynamicSystem()
-        return DYNAMIC_SYSTEM!!.installationProgress
+        return dynamicSystemService!!.installationProgress
     }
 
     // REQUIRES MANAGE_DYNAMIC_SYSTEM
     override fun abort(): Boolean {
         requiresDynamicSystem()
-        return DYNAMIC_SYSTEM!!.abort()
+        return dynamicSystemService!!.abort()
     }
 
     // REQUIRES MANAGE_DYNAMIC_SYSTEM
     override fun isEnabled(): Boolean {
         requiresDynamicSystem()
-        return DYNAMIC_SYSTEM!!.isEnabled
+        return dynamicSystemService!!.isEnabled
     }
 
     // REQUIRES MANAGE_DYNAMIC_SYSTEM
     override fun remove(): Boolean {
         requiresDynamicSystem()
-        return DYNAMIC_SYSTEM!!.remove()
+        return dynamicSystemService!!.remove()
     }
 
     // REQUIRES MANAGE_DYNAMIC_SYSTEM
     override fun setEnable(enable: Boolean, oneShot: Boolean): Boolean {
         requiresDynamicSystem()
-        return DYNAMIC_SYSTEM!!.setEnable(enable, oneShot)
+        return dynamicSystemService!!.setEnable(enable, oneShot)
     }
 
     // REQUIRES MANAGE_DYNAMIC_SYSTEM
     override fun startInstallation(dsuSlot: String?): Boolean {
         requiresDynamicSystem()
-        return DYNAMIC_SYSTEM!!.startInstallation(dsuSlot)
+        return dynamicSystemService!!.startInstallation(dsuSlot)
     }
 
     // REQUIRES MANAGE_DYNAMIC_SYSTEM
@@ -239,8 +243,8 @@ class PrivilegedService : IPrivilegedService.Stub() {
         // Below T, createPartition returns boolean
         if (Build.VERSION.SDK_INT < 33) {
             val result = HiddenApiBypass.invoke(
-                DYNAMIC_SYSTEM!!.javaClass,
-                DYNAMIC_SYSTEM!!,
+                dynamicSystemService!!.javaClass,
+                dynamicSystemService!!,
                 "createPartition",
                 name,
                 size,
@@ -248,48 +252,48 @@ class PrivilegedService : IPrivilegedService.Stub() {
             )
             return if (result as Boolean) IGsiService.INSTALL_OK else IGsiService.INSTALL_ERROR_GENERIC
         }
-        return DYNAMIC_SYSTEM!!.createPartition(name, size, readOnly)
+        return dynamicSystemService!!.createPartition(name, size, readOnly)
     }
 
     // REQUIRES MANAGE_DYNAMIC_SYSTEM
     override fun setAshmem(fd: ParcelFileDescriptor?, size: Long): Boolean {
         requiresDynamicSystem()
-        return DYNAMIC_SYSTEM!!.setAshmem(fd, size)
+        return dynamicSystemService!!.setAshmem(fd, size)
     }
 
     // REQUIRES MANAGE_DYNAMIC_SYSTEM
     override fun submitFromAshmem(bytes: Long): Boolean {
         requiresDynamicSystem()
-        return DYNAMIC_SYSTEM!!.submitFromAshmem(bytes)
+        return dynamicSystemService!!.submitFromAshmem(bytes)
     }
 
     // REQUIRES MANAGE_DYNAMIC_SYSTEM
     override fun suggestScratchSize(): Long {
         requiresDynamicSystem()
-        return DYNAMIC_SYSTEM!!.suggestScratchSize()
+        return dynamicSystemService!!.suggestScratchSize()
     }
 
     override fun isInUse(): Boolean {
         requiresDynamicSystem()
-        return DYNAMIC_SYSTEM!!.isInUse
+        return dynamicSystemService!!.isInUse
     }
 
     override fun isInstalled(): Boolean {
         requiresDynamicSystem()
-        return DYNAMIC_SYSTEM!!.isInstalled
+        return dynamicSystemService!!.isInstalled
     }
 
     //
     // GSI backing image service
     //
 
-    private var GSI_SERVICE: IGsiService? = null
+    private var gsiService: IGsiService? = null
 
     private fun requiresGsiService(): IGsiService {
-        if (GSI_SERVICE == null) {
-            GSI_SERVICE = IGsiService.Stub.asInterface(getGsiServiceBinder())
+        if (gsiService == null) {
+            gsiService = IGsiService.Stub.asInterface(getGsiServiceBinder())
         }
-        return GSI_SERVICE!!
+        return gsiService!!
     }
 
     private fun getGsiServiceBinder(): IBinder {
@@ -362,6 +366,53 @@ class PrivilegedService : IPrivilegedService.Stub() {
         }
     }
 
+    override fun addDsuBackingImage(
+        prefix: String?,
+        imageName: String?,
+        imageFd: ParcelFileDescriptor?,
+        imageSize: Long,
+        readOnly: Boolean,
+    ): String {
+        return runCatching {
+            validateGsiPrefix(prefix)
+            validateGsiImageName(imageName)
+            requireNotNull(imageFd) { "input image fd is null" }
+
+            ensureGsiServiceDirectory("/data/gsi/$prefix")
+            ensureGsiServiceDirectory("/metadata/gsi/$prefix")
+
+            val imageService = requiresGsiService().openImageService(prefix!!)
+            addDsuBackingImage(imageService, imageName!!, imageFd, imageSize, readOnly)
+            ""
+        }.getOrElse {
+            Log.e(BuildConfig.APPLICATION_ID, it.stackTraceToString())
+            it.message ?: it.toString()
+        }.also {
+            runCatching { imageFd?.close() }
+        }
+    }
+
+    override fun exportDsuBackingImage(
+        prefix: String?,
+        imageName: String?,
+        imageFd: ParcelFileDescriptor?,
+    ): String {
+        return runCatching {
+            validateGsiPrefix(prefix)
+            validateGsiImageName(imageName)
+            requireNotNull(imageFd) { "output image fd is null" }
+
+            val imageService = requiresGsiService().openImageService(prefix!!)
+            exportDsuBackingImage(imageService, imageName!!, imageFd)
+            ""
+        }.getOrElse {
+            Log.e(BuildConfig.APPLICATION_ID, it.stackTraceToString())
+            it.message ?: it.toString()
+        }.also {
+            runCatching { imageFd?.close() }
+        }
+    }
+
     private fun deleteDsuBackingImage(
         imageService: IImageService,
         imageName: String,
@@ -383,13 +434,84 @@ class PrivilegedService : IPrivilegedService.Stub() {
         imageSize: Long,
         readOnly: Boolean,
     ) {
-        require(imageSize > 0) { "input image is empty" }
-        require(imageSize % 512L == 0L) { "input image size must be 512-byte aligned: $imageSize" }
+        writeDsuBackingImage(
+            imageService = imageService,
+            imageName = imageName,
+            imageFd = imageFd,
+            imageSize = imageSize,
+            readOnly = readOnly,
+            replaceExisting = true,
+        )
+    }
 
+    private fun addDsuBackingImage(
+        imageService: IImageService,
+        imageName: String,
+        imageFd: ParcelFileDescriptor,
+        imageSize: Long,
+        readOnly: Boolean,
+    ) {
+        writeDsuBackingImage(
+            imageService = imageService,
+            imageName = imageName,
+            imageFd = imageFd,
+            imageSize = imageSize,
+            readOnly = readOnly,
+            replaceExisting = false,
+        )
+    }
+
+    private fun exportDsuBackingImage(
+        imageService: IImageService,
+        imageName: String,
+        imageFd: ParcelFileDescriptor,
+    ) {
+        if (!imageService.backingImageExists(imageName)) {
+            throw IllegalStateException("Image not found: $imageName")
+        }
         if (imageService.isImageMapped(imageName)) {
             imageService.unmapImageDevice(imageName)
         }
-        if (imageService.backingImageExists(imageName)) {
+
+        var mapped = false
+        try {
+            val mappedImage = MappedImage()
+            imageService.mapImageDevice(imageName, IMAGE_SERVICE_WAIT_MS, mappedImage)
+            mapped = true
+
+            val mappedPath = mappedImage.path
+                ?: throw IllegalStateException("mapImageDevice($imageName) returned empty path")
+            copyBlockDeviceToFile(mappedPath, imageFd)
+        } finally {
+            if (mapped) {
+                runCatching { imageService.unmapImageDevice(imageName) }
+            }
+        }
+    }
+
+    private fun writeDsuBackingImage(
+        imageService: IImageService,
+        imageName: String,
+        imageFd: ParcelFileDescriptor,
+        imageSize: Long,
+        readOnly: Boolean,
+        replaceExisting: Boolean,
+    ) {
+        require(imageSize > 0) { "input image is empty" }
+        require(imageSize % 512L == 0L) { "input image size must be 512-byte aligned: $imageSize" }
+
+        val exists = imageService.backingImageExists(imageName)
+        if (exists && !replaceExisting) {
+            throw IllegalStateException("Image already exists: $imageName")
+        }
+        val isMapped = imageService.isImageMapped(imageName)
+        if (isMapped && !replaceExisting) {
+            throw IllegalStateException("Image already exists: $imageName")
+        }
+        if (isMapped) {
+            imageService.unmapImageDevice(imageName)
+        }
+        if (exists) {
             imageService.deleteBackingImage(imageName)
         }
 
@@ -419,6 +541,25 @@ class PrivilegedService : IPrivilegedService.Stub() {
         }
 
         imageService.unmapImageDevice(imageName)
+    }
+
+    private fun copyBlockDeviceToFile(
+        mappedPath: String,
+        imageFd: ParcelFileDescriptor,
+    ) {
+        val buffer = ByteArray(4 * 1024 * 1024)
+        FileInputStream(mappedPath).use { input ->
+            ParcelFileDescriptor.AutoCloseOutputStream(imageFd).use { output ->
+                while (true) {
+                    val read = input.read(buffer)
+                    if (read < 0) {
+                        break
+                    }
+                    output.write(buffer, 0, read)
+                }
+                output.fd.sync()
+            }
+        }
     }
 
     private fun copyFileToBlockDevice(
@@ -465,7 +606,7 @@ class PrivilegedService : IPrivilegedService.Stub() {
         if (!directory.exists() && !directory.mkdirs()) {
             throw IllegalStateException("failed to create $path")
         }
-        runCommand("/system/bin/chmod", "0755", path)
+        Os.chmod(path, "0755".toInt(8))
         runCommand("/system/bin/restorecon", "-R", path)
     }
 
