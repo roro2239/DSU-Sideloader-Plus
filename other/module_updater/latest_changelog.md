@@ -1,4 +1,4 @@
-### DSU Sideloader Plus v1.0.0 (225)
+### DSU Sideloader Plus v1.0.0 (228)
 
 - 在已安装DSU时
   - 更新 DSU (来自 dingdang66686/DSU-Sideloader)
