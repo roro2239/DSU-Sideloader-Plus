@@ -4,9 +4,12 @@ import android.content.Intent
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -37,6 +40,7 @@ fun Images(
     imagesViewModel: ImagesViewModel = hiltViewModel(),
 ) {
     val uiState by imagesViewModel.uiState.collectAsStateWithLifecycle()
+    val bottomPadding = WindowInsets.safeDrawing.asPaddingValues().calculateBottomPadding() + 26.dp
     var chooseFile = Intent(Intent.ACTION_OPEN_DOCUMENT)
     chooseFile.type = "*/*"
     chooseFile.putExtra(Intent.EXTRA_MIME_TYPES, arrayOf("application/octet-stream"))
@@ -75,7 +79,7 @@ fun Images(
                 items = items,
                 modifier = Modifier.fillMaxSize(),
                 key = { it.key },
-                contentPadding = PaddingValues(bottom = 26.dp),
+                contentPadding = PaddingValues(bottom = bottomPadding),
             ) { item ->
                 when (item) {
                     ImagesListItem.Operation ->

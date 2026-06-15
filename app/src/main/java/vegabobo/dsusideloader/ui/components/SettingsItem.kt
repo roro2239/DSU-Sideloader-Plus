@@ -14,15 +14,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Switch
-import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -86,24 +83,17 @@ fun SettingsItem(
 }
 
 @Composable
-fun ExpandableSettingsSwitchItem(
+fun ExpandableSettingsItem(
     title: String,
     summary: String? = null,
-    checked: Boolean,
-    onCheckedChange: (Boolean) -> Unit,
     expanded: Boolean,
     onExpandedChange: (Boolean) -> Unit,
     enabled: Boolean = true,
+    rowTrailingContent: @Composable (RowScope.() -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit
 ) {
     val haptic = LocalHapticFeedback.current
 
-    LaunchedEffectAfterFirst(checked) {
-        haptic.performHapticFeedback(
-            hapticFeedbackType = if (checked) HapticFeedbackType.ToggleOn
-            else HapticFeedbackType.ToggleOff
-        )
-    }
     LaunchedEffectAfterFirst(expanded) {
         haptic.performHapticFeedback(
             hapticFeedbackType = if (expanded) HapticFeedbackType.ToggleOn
@@ -112,7 +102,6 @@ fun ExpandableSettingsSwitchItem(
     }
 
     Column(modifier = Modifier.fillMaxWidth()) {
-
         Box(
             modifier = Modifier
                 .clickable(enabled = enabled) {
@@ -141,20 +130,11 @@ fun ExpandableSettingsSwitchItem(
                         )
                     }
                 }
-                Switch(
-                    enabled = enabled,
-                    checked = checked,
-                    thumbContent = if (checked) {
-                        {
-                            Icon(
-                                imageVector = Icons.Filled.Check,
-                                contentDescription = null,
-                                modifier = Modifier.size(SwitchDefaults.IconSize),
-                            )
-                        }
-                    } else null,
-                    onCheckedChange = onCheckedChange
-                )
+
+                if (rowTrailingContent != null) {
+                    Spacer(modifier = Modifier.width(8.dp))
+                    rowTrailingContent(this)
+                }
             }
             Box(
                 modifier = Modifier

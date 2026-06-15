@@ -1,8 +1,11 @@
 package vegabobo.dsusideloader.ui.screen.libraries
 
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -30,6 +33,7 @@ fun LibrariesScreen(
     val libraries = remember(context) {
         Libs.Builder().withContext(context).build().libraries
     }
+    val bottomPadding = WindowInsets.safeDrawing.asPaddingValues().calculateBottomPadding() + 26.dp
 
     ApplicationScreen(
         enableDefaultScrollBehavior = false,
@@ -47,7 +51,7 @@ fun LibrariesScreen(
             items = libraries,
             modifier = Modifier.fillMaxSize(),
             key = { it.uniqueId },
-            contentPadding = PaddingValues(bottom = 26.dp),
+            contentPadding = PaddingValues(bottom = bottomPadding),
         ) { library ->
             val urlToOpen = library.website.orEmpty()
             SettingsItem(

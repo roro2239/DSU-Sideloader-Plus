@@ -19,6 +19,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -26,7 +30,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import vegabobo.dsusideloader.R
-import vegabobo.dsusideloader.ui.components.SettingsItem
+import vegabobo.dsusideloader.ui.components.ExpandableSettingsItem
 import vegabobo.dsusideloader.ui.components.buttons.PrimaryButton
 
 @Composable
@@ -36,10 +40,13 @@ fun DsuInstalledCardContent(
     onClickRebootToDynOS: () -> Unit,
     onClickDiscardDsu: () -> Unit,
 ) {
-    SettingsItem(
+    var expanded by remember { mutableStateOf(false) }
+
+    ExpandableSettingsItem(
         title = stringResource(R.string.installation),
         summary = stringResource(R.string.dsu_already_installed),
-        onClick = onClickInstall,
+        expanded = expanded,
+        onExpandedChange = { expanded = it },
         rowTrailingContent = {
             PrimaryButton(
                 modifier = Modifier.height(36.dp),
@@ -47,30 +54,29 @@ fun DsuInstalledCardContent(
                 onClick = onClickInstall,
             )
         }
-    )
-
-    CardButton(
-        modifier = Modifier,
-        icon = Icons.Outlined.Inventory2,
-        text = stringResource(id = R.string.manage_dsu_images),
-        color = MaterialTheme.colorScheme.primary,
-        onClick = onClickManageImages,
-    )
-    CardButton(
-        modifier = Modifier,
-        icon = Icons.Outlined.PowerSettingsNew,
-        text = stringResource(id = R.string.reboot_into_dsu),
-        color = MaterialTheme.colorScheme.secondary,
-        onClick = onClickRebootToDynOS,
-    )
-    CardButton(
-        modifier = Modifier
-            .padding(bottom = 16.dp),
-        icon = Icons.Outlined.DeleteForever,
-        text = stringResource(id = R.string.discard),
-        color = MaterialTheme.colorScheme.error,
-        onClick = onClickDiscardDsu,
-    )
+    ) {
+        CardButton(
+            modifier = Modifier,
+            icon = Icons.Outlined.Inventory2,
+            text = stringResource(id = R.string.manage_dsu_images),
+            color = MaterialTheme.colorScheme.primary,
+            onClick = onClickManageImages,
+        )
+        CardButton(
+            modifier = Modifier,
+            icon = Icons.Outlined.PowerSettingsNew,
+            text = stringResource(id = R.string.reboot_into_dsu),
+            color = MaterialTheme.colorScheme.secondary,
+            onClick = onClickRebootToDynOS,
+        )
+        CardButton(
+            modifier = Modifier,
+            icon = Icons.Outlined.DeleteForever,
+            text = stringResource(id = R.string.discard),
+            color = MaterialTheme.colorScheme.error,
+            onClick = onClickDiscardDsu,
+        )
+    }
 }
 
 @Composable
@@ -83,10 +89,9 @@ private fun CardButton(
 ) {
     Row(
         modifier = modifier
-            .height(54.dp)
             .fillMaxWidth()
             .clickable(onClick = onClick)
-            .padding(horizontal = 36.dp),
+            .padding(horizontal = 36.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Box(

@@ -4,7 +4,6 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -133,10 +132,6 @@ class MainActivity : ComponentActivity(), Shizuku.OnRequestPermissionResultListe
         super.onCreate(savedInstanceState)
         Shell.getShell {}
         enableEdgeToEdge()
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            window.isNavigationBarContrastEnforced = false
-            window.isStatusBarContrastEnforced = false
-        }
 
         setContent {
             DSUHelperTheme {

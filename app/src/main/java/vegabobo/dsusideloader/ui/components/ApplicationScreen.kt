@@ -91,9 +91,7 @@ fun ApplicationScreen(
                             .then(contentInsetsModifier)
                     ) {
                         Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(bottom = bottomInset)
+                            modifier = Modifier.fillMaxSize()
                         ) {
                             content()
                         }
