@@ -12,8 +12,12 @@ plugins {
     alias(libs.plugins.ksp) apply false
 }
 
-val versionCode by extra { 8 }
-val versionName by extra { "2.03" }
+val gitCommitsCount = providers.exec {
+    commandLine("git", "rev-list", "--count", "HEAD")
+}.standardOutput.asText.get().trim().toInt()
+
+val versionCode by extra { gitCommitsCount }
+val versionName by extra { "1.0.0" }
 val packageName by extra { "yangfentuozi.dsusideloaderplus" }
 
 tasks.register<Delete>("clean") {
