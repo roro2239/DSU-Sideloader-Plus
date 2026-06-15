@@ -11,7 +11,7 @@
     <string name="storage_warning">Cảnh báo lưu trữ</string>
     <string name="continue_anyway">Vẫn tiếp tục</string>
     <string name="missing_permission">Thiếu quyền</string>
-    <string name="missing_permission_description">DSU Sideloader yêu cầu quyền READ_LOGS (cho phép đọc logcat).\nQuyền này được sử dụng để lấy tiến độ cài đặt và chẩn đoán lỗi trong cài đặt DSU.\n\n**Việc cấp quyền này có thể yêu cầu khởi động lại ứng dụng.</string>
+    <string name="missing_permission_description">DSU Sideloader Plus yêu cầu quyền READ_LOGS (cho phép đọc logcat).\nQuyền này được sử dụng để lấy tiến độ cài đặt và chẩn đoán lỗi trong cài đặt DSU.\n\n**Việc cấp quyền này có thể yêu cầu khởi động lại ứng dụng.</string>
     <string name="granting_permission">Đang chờ dịch vụ cấp quyền, vui lòng đợi…</string>
     <!-- Installation card -->
     <string name="select_gsi_info">Chọn một tệp sẽ được cài đặt</string>
@@ -50,21 +50,21 @@
     <string name="discard_dsu">Hủy DSU</string>
     <!-- Allocation error card -->
     <string name="allocation_error">Lỗi phân bổ</string>
-    <string name="allocation_error_description">Phân bổ trên thẻ sd không hoạt động, có một số bản sửa lỗi bạn có thể thử:\n - Cài đặt mô-đun của DSU Sideloader Magisk.\n - Ngắt kết nối thẻ sd (bạn có thể đặt tùy chọn này vĩnh viễn trong cài đặt).</string>
+    <string name="allocation_error_description">Phân bổ trên thẻ sd không hoạt động, có một số bản sửa lỗi bạn có thể thử:\n - Cài đặt mô-đun của DSU Sideloader Plus Magisk.\n - Ngắt kết nối thẻ sd (bạn có thể đặt tùy chọn này vĩnh viễn trong cài đặt).</string>
     <string name="allocation_error_action">Ngắt kết nối SD và thử lại</string>
     <!-- No free storage error card -->
     <string name="storage_error">Lỗi lưu trữ</string>
     <string name="storage_error_description">Android yêu cầu ít nhất %1$s%% bộ nhớ miễn phí để tiến hành cài đặt, hãy giải phóng một số dung lượng và thử lại.</string>
     <!-- Filesystem features not found error card -->
     <string name="fs_features_error">Tính năng FS không khả dụng</string>
-    <string name="fs_features_error_description">Kernel của bạn có thể đang đăng ký f2fs theo đường dẫn khác mà bạn mong đợi từ daemon GSI, có một số bản sửa lỗi bạn có thể thử:\n - Cài đặt mô-đun DSU Sideloader Magisk.\n - Thay đổi nhân.</string>
+    <string name="fs_features_error_description">Kernel của bạn có thể đang đăng ký f2fs theo đường dẫn khác mà bạn mong đợi từ daemon GSI, có một số bản sửa lỗi bạn có thể thử:\n - Cài đặt mô-đun DSU Sideloader Plus Magisk.\n - Thay đổi nhân.</string>
     <!-- SELinux error card -->
     <string name="selinux_error">Lỗi SELinux</string>
-    <string name="selinux_error_description">Có vẻ như những lời từ chối của SELinux đang ngăn quá trình cài đặt DSU, có một số bản sửa lỗi bạn có thể thử:\n - Cài đặt mô-đun của DSU Sideloader Magisk.\n - Nếu bạn đang sử dụng sdcard, hãy thử ngắt kết nối nó (có một tùy chọn cho điều đó trong cài đặt).\n - Thay đổi SELinux của bạn thành dễ dãi (không được khuyến nghị, làm yếu bảo mật thiết bị của bạn).</string>
+    <string name="selinux_error_description">Có vẻ như những lời từ chối của SELinux đang ngăn quá trình cài đặt DSU, có một số bản sửa lỗi bạn có thể thử:\n - Cài đặt mô-đun của DSU Sideloader Plus Magisk.\n - Nếu bạn đang sử dụng sdcard, hãy thử ngắt kết nối nó (có một tùy chọn cho điều đó trong cài đặt).\n - Thay đổi SELinux của bạn thành dễ dãi (không được khuyến nghị, làm yếu bảo mật thiết bị của bạn).</string>
     <string name="selinux_error_action">Thử lại với permissive</string>
     <!-- Extents error card -->
     <string name="extents_error_title">Phạm vi lỗi</string>
-    <string name="extents_error_description">Trên thiết bị Android 10, Image/hệ thống tệp cần có nhiều hơn 512 phạm vi, có một số bản sửa lỗi bạn có thể thử:\n - Cài đặt mô-đun của DSU Sideloader Magisk.</string>
+    <string name="extents_error_description">Trên thiết bị Android 10, Image/hệ thống tệp cần có nhiều hơn 512 phạm vi, có một số bản sửa lỗi bạn có thể thử:\n - Cài đặt mô-đun của DSU Sideloader Plus Magisk.</string>
     <!-- Other errors card -->
     <string name="failed_create_partition">Không thể tạo phân vùng %1$s.</string>
     <string name="unknown_error">Lỗi không xác định.</string>
@@ -89,7 +89,7 @@
     <string name="not_recommended_option">Tùy chọn này thực sự không thể sử dụng được!</string>
     <!-- Image size dialog -->
     <string name="dialog_image_size">Đặt kích thước hình ảnh?</string>
-    <string name="dialog_image_size_description">DSU Sideloader sẽ tự động đặt thông số này cho bạn, việc thiết lập kích thước hình ảnh theo cách thủ công là điều không thể tránh khỏi.</string>
+    <string name="dialog_image_size_description">DSU Sideloader Plus sẽ tự động đặt thông số này cho bạn, việc thiết lập kích thước hình ảnh theo cách thủ công là điều không thể tránh khỏi.</string>
     <string name="set_anyway">Vẫn đặt</string>
     <!-- What is DSU card -->
     <string name="what_is_dsu">DSU là gì?</string>

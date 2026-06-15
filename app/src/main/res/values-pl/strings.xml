@@ -11,7 +11,7 @@
     <string name="storage_warning">Ostrzeżenie o pamięci</string>
     <string name="continue_anyway">Kontynuuj mimo to</string>
     <string name="missing_permission">Brakujące uprawnienia</string>
-    <string name="missing_permission_description">DSU Sideloader wymaga uprawnienia READ_LOGS (co pozwala na odczyt logcatu).\nTo uprawnienie jest używane do uzyskania postępu instalacji i diagnozowania błędów w instalacji DSU.\n\n** Udzielenie tego uprawnienia może wymagać ponownego uruchomienia aplikacji.</string>
+    <string name="missing_permission_description">DSU Sideloader Plus wymaga uprawnienia READ_LOGS (co pozwala na odczyt logcatu).\nTo uprawnienie jest używane do uzyskania postępu instalacji i diagnozowania błędów w instalacji DSU.\n\n** Udzielenie tego uprawnienia może wymagać ponownego uruchomienia aplikacji.</string>
     <string name="granting_permission">Oczekiwanie na uprawnienia, proszę czekać…</string>
     <!-- Installation card -->
     <string name="select_gsi_info">Wybierz plik do instalacji</string>
@@ -50,21 +50,21 @@
     <string name="discard_dsu">Odrzuć DSU</string>
     <!-- Allocation error card -->
     <string name="allocation_error">Błąd alokacji</string>
-    <string name="allocation_error_description">Przydział na karcie sd nie działa, istnieją pewne poprawki, które możesz spróbować:\n - Zainstaluj moduł DSU Sideloader Magisk.\n - Odłącz kartę SD (możesz ustawić tę opcję na stałe w ustawieniach).</string>
+    <string name="allocation_error_description">Przydział na karcie sd nie działa, istnieją pewne poprawki, które możesz spróbować:\n - Zainstaluj moduł DSU Sideloader Plus Magisk.\n - Odłącz kartę SD (możesz ustawić tę opcję na stałe w ustawieniach).</string>
     <string name="allocation_error_action">Odłącz SD i spróbuj ponownie</string>
     <!-- No free storage error card -->
     <string name="storage_error">Błąd pamięci</string>
     <string name="storage_error_description">Android wymaga co najmniej %1$s%% wolnego miejsca, aby kontynuować instalację, zwolnij trochę miejsca i spróbować ponownie.</string>
     <!-- Filesystem features not found error card -->
     <string name="fs_features_error">Funkcje FS niedostępne</string>
-    <string name="fs_features_error_description">Twój kernel prawdopodobnie rejestruje się f2f w innej ścieżce niż oczekiwana od daemona GSI, istnieją pewne poprawki, które możesz wypróbować:\n - Zainstaluj moduł DSU Sideloader Magisk.\n - Zmiana kernel.</string>
+    <string name="fs_features_error_description">Twój kernel prawdopodobnie rejestruje się f2f w innej ścieżce niż oczekiwana od daemona GSI, istnieją pewne poprawki, które możesz wypróbować:\n - Zainstaluj moduł DSU Sideloader Plus Magisk.\n - Zmiana kernel.</string>
     <!-- SELinux error card -->
     <string name="selinux_error">Błąd SELinux</string>
-    <string name="selinux_error_description">Wygląda na to, że odmowy SELinux uniemożliwiają instalację DSU, istnieją pewne poprawki, które możesz wypróbować:\n - Zainstaluj moduł DSU Sideloader Magisk.\n - Jeśli używasz karty sd, spróbuj ją odłączyć (jest taka opcja w sekcji ustawień).\n - Zmień SELinux na permissive (nie zalecane, osłabia bezpieczeństwo urządzenia).</string>
+    <string name="selinux_error_description">Wygląda na to, że odmowy SELinux uniemożliwiają instalację DSU, istnieją pewne poprawki, które możesz wypróbować:\n - Zainstaluj moduł DSU Sideloader Plus Magisk.\n - Jeśli używasz karty sd, spróbuj ją odłączyć (jest taka opcja w sekcji ustawień).\n - Zmień SELinux na permissive (nie zalecane, osłabia bezpieczeństwo urządzenia).</string>
     <string name="selinux_error_action">Spróbuj ponownie z permissive</string>
     <!-- Extents error card -->
     <string name="extents_error_title">Błąd zakresu</string>
-    <string name="extents_error_description">Na urządzeniach z Androidem 10 zdjęcia/system plików musi mieć więcej niż 512 rozmiarów, istnieją poprawki które możesz wypróbować:\n - Zainstaluj moduł DSU Sideloader Magisk.</string>
+    <string name="extents_error_description">Na urządzeniach z Androidem 10 zdjęcia/system plików musi mieć więcej niż 512 rozmiarów, istnieją poprawki które możesz wypróbować:\n - Zainstaluj moduł DSU Sideloader Plus Magisk.</string>
     <!-- Other errors card -->
     <string name="failed_create_partition">Nie udało się utworzyć partycji %1$s.</string>
     <string name="unknown_error">Nieznany błąd,</string>
@@ -89,7 +89,7 @@
     <string name="not_recommended_option">Ta opcja jest zdecydowanie niewskazana!</string>
     <!-- Image size dialog -->
     <string name="dialog_image_size">Ustaw rozmiar obrazu?</string>
-    <string name="dialog_image_size_description">DSU Sideloader ustawiy ten parametr automatycznie, ustawienie rozmiaru obrazu ręcznie jest zdecydowanie niewskazane.</string>
+    <string name="dialog_image_size_description">DSU Sideloader Plus ustawiy ten parametr automatycznie, ustawienie rozmiaru obrazu ręcznie jest zdecydowanie niewskazane.</string>
     <string name="set_anyway">Ustaw mimo to</string>
     <!-- What is DSU card -->
     <string name="what_is_dsu">Co to jest DSU?</string>

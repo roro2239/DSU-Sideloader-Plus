@@ -24,9 +24,10 @@ import yangfentuozi.dsusideloaderplus.ui.screen.Destinations
 import yangfentuozi.dsusideloaderplus.util.collectAsStateWithLifecycle
 
 object AboutLinks {
-    const val CONTRIBUTORS_URL = "https://github.com/VegaBobo/DSU-Sideloader/graphs/contributors"
-    const val REPOSITORY_URL = "https://github.com/VegaBobo/DSU-Sideloader"
+    const val CONTRIBUTORS_URL = "https://github.com/yangFenTuoZi/DSU-Sideloader-Plus/graphs/contributors"
+    const val REPOSITORY_URL = "https://github.com/yangFenTuoZi/DSU-Sideloader-Plus"
     const val WSTXDA_GITHUB = "https://github.com/WSTxda"
+    const val YANGFENTUOZI_GITHUB = "https://github.com/yangFenTuoZi"
     const val VEGABOBO_GITHUB = "https://github.com/VegaBobo"
 }
 
@@ -102,8 +103,15 @@ fun AboutScreen(
         SplicedColumnGroup(title = stringResource(id = R.string.collaborators)) {
             item {
                 SettingsItem(
+                    title = "yangFenTuoZi",
+                    summary = stringResource(id = R.string.role_fork_developer),
+                    onClick = { uriHandler.openUri(AboutLinks.YANGFENTUOZI_GITHUB) },
+                )
+            }
+            item {
+                SettingsItem(
                     title = "VegaBobo",
-                    summary = stringResource(id = R.string.role_developer),
+                    summary = stringResource(id = R.string.role_original_developer),
                     onClick = { uriHandler.openUri(AboutLinks.VEGABOBO_GITHUB) },
                 )
             }

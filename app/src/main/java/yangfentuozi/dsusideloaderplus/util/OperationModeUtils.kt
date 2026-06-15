@@ -7,7 +7,7 @@ import rikka.shizuku.Shizuku
 import rikka.shizuku.ShizukuProvider
 
 /**
- * DSU Sideloader operation modes
+ * DSU Sideloader Plus operation modes
  *
  * ADB (unrooted): Default operation mode when other modes aren't available
  * Features:

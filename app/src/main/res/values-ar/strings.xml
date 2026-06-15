@@ -11,7 +11,7 @@
     <string name="storage_warning">إنذار سعة التخزين</string>
     <string name="continue_anyway">إستمر على أي حال</string>
     <string name="missing_permission">إذن مفقود</string>
-    <string name="missing_permission_description">DSU Sideloader يتطلب إذن READ_LOGS (الذي يسمح بقراءة logcat).\n يتم استخدام هذا الإذن للحصول على تقدم التثبيت وتشخيص الأخطاء في تثبيت.\n\n** قد يتطلب منح هذا الإذن إعادة تشغيل التطبيق.</string>
+    <string name="missing_permission_description">DSU Sideloader Plus يتطلب إذن READ_LOGS (الذي يسمح بقراءة logcat).\n يتم استخدام هذا الإذن للحصول على تقدم التثبيت وتشخيص الأخطاء في تثبيت.\n\n** قد يتطلب منح هذا الإذن إعادة تشغيل التطبيق.</string>
     <string name="granting_permission">في انتظار الخدمة لمنح الإذن، يرجى الانتظار…</string>
     <!-- Installation card -->
     <string name="select_gsi_info">حدد ملفاً ليتم تثبيته</string>
@@ -50,14 +50,14 @@
     <string name="discard_dsu">تجاهل DSU</string>
     <!-- Allocation error card -->
     <string name="allocation_error">خطأ في التخصيص</string>
-    <string name="allocation_error_description">التخصيص على sdcard لا يعمل، هناك بعض الإصلاحات التي يمكنك محاولتها:\n - تثبيت DSU Sideloader Magisk.\n - إلغاء تحميل sdcard (يمكنك تعيين هذا الخيار بشكل دائم في الإعدادات).</string>
+    <string name="allocation_error_description">التخصيص على sdcard لا يعمل، هناك بعض الإصلاحات التي يمكنك محاولتها:\n - تثبيت DSU Sideloader Plus Magisk.\n - إلغاء تحميل sdcard (يمكنك تعيين هذا الخيار بشكل دائم في الإعدادات).</string>
     <string name="allocation_error_action">إلغاء تحميل SD وإعادة المحاولة</string>
     <!-- No free storage error card -->
     <string name="storage_error">خطأ في وحدة التخزين</string>
     <string name="storage_error_description">يتطلب أندرويد على الأقل %1$s%% من مساحة التخزين المجانية لمتابعة التثبيت، قم بتفريغ بعض المساحة وحاول مرة أخرى.</string>
     <!-- Filesystem features not found error card -->
     <string name="fs_features_error">ميزات FS غير متوفرة</string>
-    <string name="fs_features_error_description">قد تكون النواة الخاصة بك تسجيل f2fs في مسار مختلف الذي توقعه من GSI daemon، هناك بعض الإصلاحات التي يمكنك تجربتها:\n - تثبيت وحدة DSU Sideloader Magisk.\n - تغيير النواة.</string>
+    <string name="fs_features_error_description">قد تكون النواة الخاصة بك تسجيل f2fs في مسار مختلف الذي توقعه من GSI daemon، هناك بعض الإصلاحات التي يمكنك تجربتها:\n - تثبيت وحدة DSU Sideloader Plus Magisk.\n - تغيير النواة.</string>
     <!-- SELinux error card -->
     <string name="selinux_error">خطأ SELinux</string>
     <!-- Other errors card -->

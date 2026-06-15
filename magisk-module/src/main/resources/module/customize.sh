@@ -9,7 +9,7 @@ function install_gsid() {
   chcon u:object_r:gsid_exec:s0 $MODPATH/system/bin/gsid
 
   # Minimum allowed for allocation is hardcoded in gsid binary
-  # values below are used by DSU Sideloader UI, nothing else
+  # values below are used by DSU Sideloader Plus UI, nothing else
   echo "ro.yangfentuozi.dsusideloaderplus.gsid_min_alloc=0.20" >>$MODPATH/system.prop
 }
 
@@ -25,5 +25,5 @@ if [[ $API -le "33" && $API -ge "29" ]] &&
   setprop persist.sys.fflag.override.settings_dynamic_system true
 fi
 
-echo "- Installing DSU Sideloader..."
+echo "- Installing DSU Sideloader Plus..."
 pm install $MODPATH/system/priv-app/DSUSideloader/ReleaseDSUSideloader.apk

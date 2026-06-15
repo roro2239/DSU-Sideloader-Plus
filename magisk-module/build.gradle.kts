@@ -3,11 +3,11 @@ plugins {
 }
 
 tasks.register<Zip>("assembleMagiskModule") {
-    val id = "dsu_sideloader"
-    val name = "DSU Sideloader"
-    val author = "VegaBobo"
-    val description = "System mode for DSU Sideloader"
-    val updateJson = "https://raw.githubusercontent.com/VegaBobo/DSU-Sideloader/master/other/module_updater/updater_module_gsid.json"
+    val id = "dsu_sideloader_plus"
+    val name = "DSU Sideloader Plus"
+    val author = "yangFenTuoZi"
+    val description = "System mode for DSU Sideloader Plus"
+    val updateJson = "https://raw.githubusercontent.com/yangFenTuoZi/DSU-Sideloader-Plus/master/other/module_updater/updater_module_gsid.json"
 
     val versionCode: Int by rootProject.extra
     val versionName: String by rootProject.extra
@@ -21,7 +21,7 @@ tasks.register<Zip>("assembleMagiskModule") {
         return@register
     }
 
-    val apkPath = File("$moduleDirectory/system/priv-app/DSUSideloader/ReleaseDSUSideloader.apk")
+    val apkPath = File("$moduleDirectory/system/priv-app/DSUSideloaderPlus/DSUSideloaderPlus.apk")
     if (apkPath.exists()) apkPath.delete()
     releaseApk.copyTo(apkPath)
 

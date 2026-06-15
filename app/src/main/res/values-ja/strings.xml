@@ -11,7 +11,7 @@
     <string name="storage_warning">ストレージの警告</string>
     <string name="continue_anyway">続行する</string>
     <string name="missing_permission">権限がありません</string>
-    <string name="missing_permission_description">DSU Sideloader は logcat の読み取りを許可するための READ_LOGS 権限が必要です。\nこの権限は、インストールの進行状況を取得し、DSU インストール中のエラーを診断するために使用されます。 \n\n\n** この権限を付与するにはアプリの再起動が必要な場合があります。</string>
+    <string name="missing_permission_description">DSU Sideloader Plus は logcat の読み取りを許可するための READ_LOGS 権限が必要です。\nこの権限は、インストールの進行状況を取得し、DSU インストール中のエラーを診断するために使用されます。 \n\n\n** この権限を付与するにはアプリの再起動が必要な場合があります。</string>
     <string name="granting_permission">権限を付与するためにサービスを待機中です。しばらくお待ちください…</string>
     <!-- Installation card -->
     <string name="select_gsi_info">インストールするファイルを選択</string>
@@ -50,21 +50,21 @@
     <string name="discard_dsu">DSU を破棄</string>
     <!-- Allocation error card -->
     <string name="allocation_error">割り当てエラー</string>
-    <string name="allocation_error_description">SD カードへの割り当てに失敗しました。以下の解決策を試してください:\n - DSU Sideloader Magisk モジュールをインストールする\n - SD カードのマウントを解除する (オプションで常にセットするよう設定できます)</string>
+    <string name="allocation_error_description">SD カードへの割り当てに失敗しました。以下の解決策を試してください:\n - DSU Sideloader Plus Magisk モジュールをインストールする\n - SD カードのマウントを解除する (オプションで常にセットするよう設定できます)</string>
     <string name="allocation_error_action">SD カードのマウントを解除して再試行する</string>
     <!-- No free storage error card -->
     <string name="storage_error">ストレージエラー</string>
     <string name="storage_error_description">インストールを続けるために少なくとも%1$s%%の空き容量が必要です。空き容量を増やして再試行してください。</string>
     <!-- Filesystem features not found error card -->
     <string name="fs_features_error">FS 機能が利用できません</string>
-    <string name="fs_features_error_description">お使いのカーネルは、GSI デーモンが想定しているものとは違うパスに F2FS を登録しています。以下の解決策を試してください:\n - DSU Sideloader Magisk モジュールをインストールする\n - カーネルを変更する</string>
+    <string name="fs_features_error_description">お使いのカーネルは、GSI デーモンが想定しているものとは違うパスに F2FS を登録しています。以下の解決策を試してください:\n - DSU Sideloader Plus Magisk モジュールをインストールする\n - カーネルを変更する</string>
     <!-- SELinux error card -->
     <string name="selinux_error">SELinux エラー</string>
-    <string name="selinux_error_description">SELinux により DSU のインストールが失敗しているようです。以下の解決策を試してください:\n - DSU Sideloader Magisk モジュールをインストールする\n - SD カードを使用している場合は、マウントを解除する (設定にオプションがあります).\n - SELinux を Permissive にする (非推奨、デバイスのセキュリティが低下します)</string>
+    <string name="selinux_error_description">SELinux により DSU のインストールが失敗しているようです。以下の解決策を試してください:\n - DSU Sideloader Plus Magisk モジュールをインストールする\n - SD カードを使用している場合は、マウントを解除する (設定にオプションがあります).\n - SELinux を Permissive にする (非推奨、デバイスのセキュリティが低下します)</string>
     <string name="selinux_error_action">Permissive にして再試行</string>
     <!-- Extents error card -->
     <string name="extents_error_title">エクステントエラー</string>
-    <string name="extents_error_description">Android 10 デバイスでは、イメージ/ファイルシステムは 512 以上のエクステントを必要とします。以下の解決策を試してください:\n - DSU Sideloader Magisk モジュールをインストールする</string>
+    <string name="extents_error_description">Android 10 デバイスでは、イメージ/ファイルシステムは 512 以上のエクステントを必要とします。以下の解決策を試してください:\n - DSU Sideloader Plus Magisk モジュールをインストールする</string>
     <!-- Other errors card -->
     <string name="failed_create_partition">パーティション %1$s の作成に失敗しました。</string>
     <!--

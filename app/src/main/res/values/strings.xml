@@ -18,11 +18,11 @@
     <string name="continue_anyway">Continue anyway</string>
 
     <string name="missing_permission">Missing permission</string>
-    <string name="missing_permission_description">DSU Sideloader requires READ_LOGS permission (which allows logcat reading).\nThis permission is used to obtain installation progress and diagnose errors in DSU installation.\n\n** Granting this permission may require a application restart.</string>
+    <string name="missing_permission_description">DSU Sideloader Plus requires READ_LOGS permission (which allows logcat reading).\nThis permission is used to obtain installation progress and diagnose errors in DSU installation.\n\n** Granting this permission may require a application restart.</string>
     <string name="granting_permission">Waiting service to grant permission, please wait…</string>
 
     <string name="unlocked_bl_warn">Unlocked bootloader</string>
-    <string name="unlocked_bl_warn_desc">DSU Sideloader requires unlocked bootloader, installing images with locked bootloader may be dangerous in some devices, before using this app, you: \n- MUST unlock bootloader.\n- MUST have some way to restore device stock firmware.\n- RECOMMENDED to do a full backup.\nThis app have been made to be used by developers and advanced users, you have been warned.</string>
+    <string name="unlocked_bl_warn_desc">DSU Sideloader Plus requires unlocked bootloader, installing images with locked bootloader may be dangerous in some devices, before using this app, you: \n- MUST unlock bootloader.\n- MUST have some way to restore device stock firmware.\n- RECOMMENDED to do a full backup.\nThis app have been made to be used by developers and advanced users, you have been warned.</string>
 
     <!-- Installation card -->
     <string name="select_gsi_info">Select a file to be installed</string>
@@ -99,7 +99,7 @@
 
     <!-- Allocation error card -->
     <string name="allocation_error">Allocation error</string>
-    <string name="allocation_error_description">Allocation on sdcard isn\'t working, there are some fixes you can try:\n - Install DSU Sideloader Magisk\'s module.\n - Unmount sdcard (you can set this option permanently in settings).</string>
+    <string name="allocation_error_description">Allocation on sdcard isn\'t working, there are some fixes you can try:\n - Install DSU Sideloader Plus Magisk\'s module.\n - Unmount sdcard (you can set this option permanently in settings).</string>
     <string name="allocation_error_action">Unmount SD and retry</string>
 
     <!-- No free storage error card -->
@@ -108,16 +108,16 @@
 
     <!-- Filesystem features not found error card -->
     <string name="fs_features_error">FS features unavailable</string>
-    <string name="fs_features_error_description">Your kernel is likely to be registering f2fs in different path that one expected from GSI daemon, there are some fixes you can try:\n - Install DSU Sideloader Magisk\'s module.\n - Changing kernel.</string>
+    <string name="fs_features_error_description">Your kernel is likely to be registering f2fs in different path that one expected from GSI daemon, there are some fixes you can try:\n - Install DSU Sideloader Plus Magisk\'s module.\n - Changing kernel.</string>
 
     <!-- SELinux error card -->
     <string name="selinux_error">SELinux error</string>
-    <string name="selinux_error_description">Looks like SELinux denials are preventing DSU installation, there are some fixes you can try:\n - Install DSU Sideloader Magisk\'s module.\n - If you\'re using a sdcard, try to unmount it (there is a option for that in settings section).\n - Change your SELinux to permissive (not recommended, weakens your device security).</string>
+    <string name="selinux_error_description">Looks like SELinux denials are preventing DSU installation, there are some fixes you can try:\n - Install DSU Sideloader Plus Magisk\'s module.\n - If you\'re using a sdcard, try to unmount it (there is a option for that in settings section).\n - Change your SELinux to permissive (not recommended, weakens your device security).</string>
     <string name="selinux_error_action">Retry with permissive</string>
 
     <!-- Extents error card -->
     <string name="extents_error_title">Extents error</string>
-    <string name="extents_error_description">On Android 10 devices, images/filesystem needs to have more than 512 extents, there are some fixes you can try:\n - Install DSU Sideloader Magisk\'s module.</string>
+    <string name="extents_error_description">On Android 10 devices, images/filesystem needs to have more than 512 extents, there are some fixes you can try:\n - Install DSU Sideloader Plus Magisk\'s module.</string>
 
     <!-- Other errors card -->
     <string name="failed_create_partition">Failed to create %1$s partition.</string>
@@ -151,7 +151,7 @@
 
     <!-- Image size dialog -->
     <string name="dialog_image_size">Set image size?</string>
-    <string name="dialog_image_size_description">DSU Sideloader will set this parameter for you automatically, setting image size manually is strongly inadvisable.</string>
+    <string name="dialog_image_size_description">DSU Sideloader Plus will set this parameter for you automatically, setting image size manually is strongly inadvisable.</string>
     <string name="set_anyway">Set anyway</string>
 
     <!-- What is DSU card -->
@@ -222,6 +222,8 @@
     <string name="libraries_description">Libraries used in this app</string>
 
     <string name="role_developer">Developer</string>
+    <string name="role_fork_developer">Fork developer</string>
+    <string name="role_original_developer">Original developer</string>
     <string name="role_design_icon">Design reference, app icon</string>
 
     <string name="translators_title">Translators</string>

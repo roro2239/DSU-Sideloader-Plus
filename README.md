@@ -1,9 +1,9 @@
-# DSU Sideloader
+# DSU Sideloader Plus
 
 A simple app made to help users easily install GSIs via DSU's Android feature.
 <div>
-<img src="https://raw.githubusercontent.com/VegaBobo/DSU-Sideloader/master/other/preview_1.png" alt="preview" width="200"/>  
-<img src="https://raw.githubusercontent.com/VegaBobo/DSU-Sideloader/master/other/preview_2.png" alt="preview" width="200"/>  
+<img src="https://raw.githubusercontent.com/yangFenTuoZi/DSU-Sideloader-Plus/master/other/preview_1.png" alt="preview" width="200"/>  
+<img src="https://raw.githubusercontent.com/yangFenTuoZi/DSU-Sideloader-Plus/master/other/preview_2.png" alt="preview" width="200"/>  
 </div>
 
 ## Requirements
@@ -24,8 +24,8 @@ Google GSIs: https://developer.android.com/topic/generic-system-image/releases
      alt="Get it on F-Droid"
      height="80">](https://f-droid.org/packages/yangfentuozi.dsusideloaderplus/)
 
-Or download the latest APK from the [Releases Section](https://github.com/VegaBobo/DSU-Sideloader/releases/latest).
-For testing builds, you can check artifacts at [Actions](https://github.com/VegaBobo/DSU-Sideloader/actions) tab
+Or download the latest APK from the [Releases Section](https://github.com/yangFenTuoZi/DSU-Sideloader-Plus/releases/latest).
+For testing builds, you can check artifacts at [Actions](https://github.com/yangFenTuoZi/DSU-Sideloader-Plus/actions) tab
 
 ## How to use?
 1. Install app
@@ -48,7 +48,7 @@ For more usage information, you can check [Operation modes](#operation-modes)
 
 ## Operation modes
 
-DSU Sideloader support multiple operation modes, they will define how our app will work, also, the operation mode is obtained automatically, and by now, is impossible to change it manually, the picked operation mode will be the best available (the priority is written below, in which, the most feature supported, is the highest number, and the most basic one is the lowest).
+DSU Sideloader Plus supports multiple operation modes, they will define how our app will work, also, the operation mode is obtained automatically, and by now, is impossible to change it manually, the picked operation mode will be the best available (the priority is written below, in which, the most feature supported, is the highest number, and the most basic one is the lowest).
 
 1. ADB: Default operation mode when other modes aren't available
 - Only prepare selected image to be installed via DSU system-app
@@ -76,9 +76,9 @@ DSU Sideloader support multiple operation modes, they will define how our app wi
 <br>
 ⁴ Feature not supported on Android 10.
 <br>
-⁵ Experimental feature, built-in installer code is [here](https://github.com/VegaBobo/DSU-Sideloader/blob/master/app/src/main/java/yangfentuozi/dsusideloaderplus/installer/root/DSUInstaller.kt).
+⁵ Experimental feature, built-in installer code is [here](https://github.com/yangFenTuoZi/DSU-Sideloader-Plus/blob/master/app/src/main/java/yangfentuozi/dsusideloaderplus/installer/root/DSUInstaller.kt).
 <br>
-⁶ Module including custom gsid binary is optional, changes made to AOSP gsid binary can be found [here](https://github.com/VegaBobo/DSU-Sideloader/tree/master/magisk-module/src/main/resources/aosp_patches).
+⁶ Module including custom gsid binary is optional, changes made to AOSP gsid binary can be found [here](https://github.com/yangFenTuoZi/DSU-Sideloader-Plus/tree/master/magisk-module/src/main/resources/aosp_patches).
 
 #### Recomendations
 

@@ -1,4 +1,4 @@
-### DSU Sideloader v2.03 (8)
+### DSU Sideloader Plus v2.03 (8)
 
 - Always enforce "settings_dynamic_system" flag when possible.
     - May fix installation stuck for some devices
@@ -9,4 +9,4 @@
 - Added unlocked bootloader warning
 - Other minor fixes and improvements
 
-Read more at: https://github.com/VegaBobo/DSU-Sideloader/releases/tag/2.03
+Read more at: https://github.com/yangFenTuoZi/DSU-Sideloader-Plus/releases/tag/2.03
