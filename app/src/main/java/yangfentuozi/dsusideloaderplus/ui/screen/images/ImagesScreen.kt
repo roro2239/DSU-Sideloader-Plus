@@ -2,6 +2,8 @@ package yangfentuozi.dsusideloaderplus.ui.screen.images
 
 import android.content.Intent
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -17,13 +19,16 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Archive
 import androidx.compose.material.icons.outlined.DeleteForever
+import androidx.compose.material.icons.outlined.Folder
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.SaveAs
+import androidx.compose.material.icons.outlined.UploadFile
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -34,6 +39,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import yangfentuozi.dsusideloaderplus.R
 import yangfentuozi.dsusideloaderplus.ui.components.ApplicationScreen
+import yangfentuozi.dsusideloaderplus.ui.components.DialogLikeBottomSheet
 import yangfentuozi.dsusideloaderplus.ui.components.LazySplicedColumnGroup
 import yangfentuozi.dsusideloaderplus.ui.components.SettingsItem
 import yangfentuozi.dsusideloaderplus.ui.components.TopBar
@@ -44,6 +50,7 @@ import yangfentuozi.dsusideloaderplus.ui.sdialogs.ConfirmDSUImageAddSheet
 import yangfentuozi.dsusideloaderplus.ui.sdialogs.ConfirmDSUImageReplacementSheet
 import yangfentuozi.dsusideloaderplus.ui.sdialogs.DeleteDSUImageSheet
 import yangfentuozi.dsusideloaderplus.ui.util.launcherAcResult
+import yangfentuozi.dsusideloaderplus.ui.util.launcherAcResultMulti
 import yangfentuozi.dsusideloaderplus.util.collectAsStateWithLifecycle
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -59,6 +66,15 @@ fun Images(
     chooseFile.putExtra(Intent.EXTRA_MIME_TYPES, arrayOf("application/octet-stream"))
     chooseFile = Intent.createChooser(chooseFile, "")
 
+    val chooseSharedFiles = Intent.createChooser(
+        Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+            addCategory(Intent.CATEGORY_OPENABLE)
+            type = "*/*"
+            putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
+        },
+        "",
+    )
+
     val launcherSelectReplacement = launcherAcResult {
         imagesViewModel.onReplacementFileSelectionResult(it)
     }
@@ -67,6 +83,12 @@ fun Images(
     }
     val launcherExportImage = launcherAcResult {
         imagesViewModel.onExportFileSelectionResult(it)
+    }
+    val launcherImportSharedFiles = launcherAcResultMulti {
+        imagesViewModel.onSharedImportSelectionResult(it)
+    }
+    val launcherExportDsuFile = launcherAcResult {
+        imagesViewModel.onDsuFileExportSelectionResult(it)
     }
 
     ApplicationScreen(
@@ -87,6 +109,16 @@ fun Images(
             val items = buildList {
                 if (uiState.operationState != ImagesOperationState.IDLE) {
                     add(ImagesListItem.Operation)
+                }
+                add(ImagesListItem.SharedActions)
+                add(ImagesListItem.Roots)
+                if (uiState.currentFilePath.isNotEmpty()) {
+                    add(ImagesListItem.Parent)
+                }
+                if (uiState.dsuFiles.isEmpty()) {
+                    add(ImagesListItem.EmptyFiles)
+                } else {
+                    uiState.dsuFiles.forEach { add(ImagesListItem.File(it)) }
                 }
                 if (uiState.availablePrefixes.isNotEmpty() || uiState.images.isNotEmpty()) {
                     add(ImagesListItem.Add)
@@ -113,6 +145,49 @@ fun Images(
 
                     ImagesListItem.Empty ->
                         EmptyImagesItem()
+
+                    ImagesListItem.SharedActions ->
+                        SharedActionsItem(
+                            canModify = canModifyImages,
+                            canImport = uiState.dsuFileRoots.any { it.isSharedStorage },
+                            onClickImport = { launcherImportSharedFiles.launch(chooseSharedFiles) },
+                            onClickRefresh = { imagesViewModel.refreshDsuFiles() },
+                        )
+
+                    ImagesListItem.Roots ->
+                        DsuFileRootsItem(
+                            roots = uiState.dsuFileRoots,
+                            currentRoot = uiState.currentFileRoot,
+                            onClickRoot = { imagesViewModel.openDsuFileRoot(it) },
+                        )
+
+                    ImagesListItem.Parent ->
+                        ParentDirectoryItem(
+                            path = uiState.currentFilePath,
+                            onClick = { imagesViewModel.openParentDsuDirectory() },
+                        )
+
+                    ImagesListItem.EmptyFiles ->
+                        EmptyFilesItem(errorText = uiState.dsuFileErrorText)
+
+                    is ImagesListItem.File ->
+                        DsuFileItem(
+                            file = item.file,
+                            canModify = canModifyImages,
+                            onClickDirectory = { imagesViewModel.openDsuDirectory(it) },
+                            onClickExport = {
+                                imagesViewModel.onClickExportDsuFile(it)
+                                val intent = Intent.createChooser(
+                                    Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
+                                        addCategory(Intent.CATEGORY_OPENABLE)
+                                        type = "application/octet-stream"
+                                        putExtra(Intent.EXTRA_TITLE, it.name)
+                                    },
+                                    "",
+                                )
+                                launcherExportDsuFile.launch(intent)
+                            },
+                        )
 
                     ImagesListItem.Add ->
                         AddDsuImageItem(
@@ -185,6 +260,28 @@ fun Images(
                 onClickCancel = { imagesViewModel.dismissSheet() },
             )
 
+        ImagesSheetDisplayState.CONFIRM_IMPORT_SHARED_FILES ->
+            DialogLikeBottomSheet(
+                title = stringResource(id = R.string.import_shared_files),
+                icon = Icons.Outlined.UploadFile,
+                text = stringResource(
+                    id = R.string.import_shared_files_description,
+                    uiState.pendingImportFilenames.size,
+                ),
+                confirmText = stringResource(id = R.string.proceed),
+                cancelText = stringResource(id = R.string.cancel),
+                onClickConfirm = { imagesViewModel.confirmImportSharedFiles() },
+                onClickCancel = { imagesViewModel.dismissSheet() },
+                content = {
+                    Text(
+                        modifier = Modifier.padding(top = 8.dp),
+                        text = uiState.pendingImportFilenames.joinToString("\n"),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                },
+            )
+
         ImagesSheetDisplayState.NONE -> {}
     }
 }
@@ -204,8 +301,28 @@ private sealed class ImagesListItem {
         override val key: String = "add"
     }
 
+    data object SharedActions : ImagesListItem() {
+        override val key: String = "shared-actions"
+    }
+
+    data object Roots : ImagesListItem() {
+        override val key: String = "roots"
+    }
+
+    data object Parent : ImagesListItem() {
+        override val key: String = "parent"
+    }
+
+    data object EmptyFiles : ImagesListItem() {
+        override val key: String = "empty-files"
+    }
+
     data class Image(val image: DsuImageState) : ImagesListItem() {
         override val key: String = "image:${image.prefix}/${image.name}"
+    }
+
+    data class File(val file: DsuFileState) : ImagesListItem() {
+        override val key: String = "file:${file.root}/${file.path}"
     }
 }
 
@@ -217,8 +334,12 @@ private fun ImagesOperationItem(
     val text = when (uiState.operationState) {
         ImagesOperationState.IDLE -> return
         ImagesOperationState.LOADING -> stringResource(id = R.string.loading_dsu_images)
+        ImagesOperationState.LOADING_FILES -> stringResource(id = R.string.loading_dsu_files)
         ImagesOperationState.ADDING ->
             stringResource(id = R.string.adding_dsu_image, uiState.currentImageName)
+
+        ImagesOperationState.IMPORTING ->
+            stringResource(id = R.string.importing_shared_files, uiState.currentImageName)
 
         ImagesOperationState.EXPORTING ->
             stringResource(id = R.string.exporting_dsu_image, uiState.currentImageName)
@@ -256,6 +377,124 @@ private fun ImagesOperationItem(
                         onClick = onClickRetry,
                     )
                 }
+            }
+        },
+    )
+}
+
+@Composable
+private fun SharedActionsItem(
+    canModify: Boolean,
+    canImport: Boolean,
+    onClickImport: () -> Unit,
+    onClickRefresh: () -> Unit,
+) {
+    SettingsItem(
+        title = stringResource(id = R.string.shared_files),
+        summary = stringResource(id = R.string.shared_files_description),
+        onClick = null,
+        rowTrailingContent = {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                SecondaryButton(
+                    text = stringResource(id = R.string.refresh),
+                    onClick = onClickRefresh,
+                    isEnabled = canModify,
+                )
+                PrimaryButton(
+                    text = stringResource(id = R.string.import_file),
+                    onClick = onClickImport,
+                    isEnabled = canModify && canImport,
+                )
+            }
+        },
+    )
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun DsuFileRootsItem(
+    roots: List<DsuFileRootState>,
+    currentRoot: String,
+    onClickRoot: (String) -> Unit,
+) {
+    val currentRootLabel = roots.firstOrNull { it.id == currentRoot }?.label.orEmpty()
+    SettingsItem(
+        title = stringResource(id = R.string.dsu_file_roots),
+        summary = currentRootLabel.ifEmpty { stringResource(id = R.string.no_browsable_dsu_images) },
+        onClick = null,
+        columnTrailingContent = {
+            FlowRow(
+                modifier = Modifier.padding(top = 12.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                roots.forEach { root ->
+                    SecondaryButton(
+                        text = root.label,
+                        onClick = { onClickRoot(root.id) },
+                        isEnabled = root.id != currentRoot,
+                    )
+                }
+            }
+        },
+    )
+}
+
+@Composable
+private fun ParentDirectoryItem(
+    path: String,
+    onClick: () -> Unit,
+) {
+    SettingsItem(
+        title = stringResource(id = R.string.parent_directory),
+        summary = path,
+        onClick = onClick,
+    )
+}
+
+@Composable
+private fun EmptyFilesItem(errorText: String) {
+    SettingsItem(
+        title = stringResource(id = R.string.dsu_files),
+        summary = errorText.ifEmpty { stringResource(id = R.string.no_dsu_files) },
+        onClick = null,
+    )
+}
+
+@Composable
+private fun DsuFileItem(
+    file: DsuFileState,
+    canModify: Boolean,
+    onClickDirectory: (DsuFileState) -> Unit,
+    onClickExport: (DsuFileState) -> Unit,
+) {
+    SettingsItem(
+        title = file.name,
+        summary = if (file.isDirectory) {
+            stringResource(id = R.string.directory)
+        } else {
+            stringResource(id = R.string.file_size_bytes, file.size)
+        },
+        onClick = if (file.isDirectory) {
+            { onClickDirectory(file) }
+        } else {
+            null
+        },
+        rowTrailingContent = {
+            if (file.isDirectory) {
+                Icon(
+                    imageVector = Icons.Outlined.Folder,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                )
+            } else {
+                IconButtonWithBackground(
+                    onClick = { onClickExport(file) },
+                    imageVector = Icons.Outlined.Archive,
+                    contentDescription = stringResource(R.string.export_dsu_file),
+                    color = MaterialTheme.colorScheme.secondary,
+                    enabled = canModify,
+                )
             }
         },
     )

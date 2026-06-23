@@ -64,7 +64,9 @@
     <string name="installing_partition">正在处理 %1$s 分区…</string>
     <string name="installing">正在安装…</string>
     <string name="loading_dsu_images">正在加载 DSU 镜像…</string>
+    <string name="loading_dsu_files">正在加载 DSU 文件…</string>
     <string name="adding_dsu_image">正在新增 %1$s 镜像…</string>
+    <string name="importing_shared_files">正在导入 %1$s 个共享文件…</string>
     <string name="exporting_dsu_image">正在导出 %1$s 镜像…</string>
     <string name="replacing_dsu_image">正在替换 %1$s 镜像…</string>
     <string name="deleting_dsu_image">正在删除 %1$s 镜像…</string>
@@ -101,6 +103,7 @@
     <string name="dsu_image_operation_failed">DSU 镜像操作失败：%1$s</string>
     <string name="error">错误</string>
     <string name="try_again">再次尝试</string>
+    <string name="refresh">刷新</string>
     <string name="view_logs">查看日志</string>
     <string name="installation_canceled">取消安装</string>
     <!-- Cancel installation dialog -->
@@ -116,6 +119,29 @@
     <string name="allowed_userdata_allocation">可分配用户空间大小: %1$s GB</string>
     <string name="preserve_userdata">保留用户数据</string>
     <string name="preserve_userdata_desc">更新 DSU 时保留现有用户数据</string>
+    <!-- Shared files -->
+    <string name="shared_files">共享文件</string>
+    <string name="shared_files_description">导入文件到 DSU 共享存储，或浏览已安装 DSU 镜像中的文件。</string>
+    <string name="import_file">导入</string>
+    <string name="import_shared_files">导入共享文件？</string>
+    <string name="import_shared_files_description">选中的 %1$s 个文件将复制到 DSU 的 /sdcard/dsu_shared。同名文件将被替换。</string>
+    <string name="dsu_file_roots">DSU 文件根目录</string>
+    <string name="dsu_files">DSU 文件</string>
+    <string name="no_dsu_files">未找到文件。</string>
+    <string name="no_browsable_dsu_images">未找到可浏览的 DSU 镜像。</string>
+    <string name="dsu_userdata_image_not_found">未找到 DSU 用户数据镜像。</string>
+    <string name="dsu_userdata_offline_unavailable">当前无法从主系统访问 DSU 用户数据。请先启动一次 DSU 并完成初始化，再回到主系统重试。</string>
+    <string name="privileged_service_unavailable">特权服务不可用。</string>
+    <string name="dsu_image_requires_root_or_system">需要 Root 或系统模式。</string>
+    <string name="no_installed_dsu_prefix_found">未找到已安装的 DSU 前缀。</string>
+    <string name="unable_to_open_input_file">无法打开输入文件：%1$s</string>
+    <string name="unable_to_open_output_file">无法打开输出文件。</string>
+    <string name="unable_to_open_image_file">无法打开镜像文件。</string>
+    <string name="unable_to_open_output_image_file">无法打开输出镜像文件。</string>
+    <string name="parent_directory">上级目录</string>
+    <string name="directory">目录</string>
+    <string name="file_size_bytes">%1$d 字节</string>
+    <string name="export_dsu_file">导出文件</string>
     <!-- Image size card -->
     <string name="image_size">DSU 镜像大小</string>
     <string name="image_size_info">单位：Bytes</string>

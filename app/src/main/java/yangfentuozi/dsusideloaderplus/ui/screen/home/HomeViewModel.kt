@@ -354,7 +354,6 @@ class HomeViewModel @Inject constructor(
     //
 
     fun onClickRebootToDynOS() {
-        updateInstallationCard { it.copy(installationStep = InstallationStep.PROCESSING) }
         PrivilegedProvider.run {
             setEnable(true, true)
             Shell.cmd("reboot").exec()

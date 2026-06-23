@@ -62,4 +62,17 @@ interface IPrivilegedService {
             String imageName,
             in ParcelFileDescriptor imageFd
     ) = 4022;
+    List<String> listDsuFiles(String root, String path) = 4023;
+    String importFileToDsuShared(
+            String root,
+            in ParcelFileDescriptor fileFd,
+            String filename,
+            long fileSize,
+            boolean overwrite
+    ) = 4024;
+    String exportDsuFile(
+            String root,
+            String path,
+            in ParcelFileDescriptor fileFd
+    ) = 4025;
 }

@@ -78,7 +78,9 @@
     <string name="installing_partition">Processing %1$s partition…</string>
     <string name="installing">Installing…</string>
     <string name="loading_dsu_images">Loading DSU images…</string>
+    <string name="loading_dsu_files">Loading DSU files…</string>
     <string name="adding_dsu_image">Adding %1$s image…</string>
+    <string name="importing_shared_files">Importing %1$s shared files…</string>
     <string name="exporting_dsu_image">Exporting %1$s image…</string>
     <string name="replacing_dsu_image">Replacing %1$s image…</string>
     <string name="deleting_dsu_image">Deleting %1$s image…</string>
@@ -125,6 +127,7 @@
     <string name="dsu_image_operation_failed">DSU image operation failed: %1$s</string>
     <string name="error">Error</string>
     <string name="try_again">Try again</string>
+    <string name="refresh">Refresh</string>
     <string name="view_logs">View logs</string>
     <string name="installation_canceled">Installation canceled.</string>
 
@@ -143,6 +146,30 @@
     <string name="allowed_userdata_allocation">Maximum available for allocation: %1$sGB</string>
     <string name="preserve_userdata">Preserve userdata</string>
     <string name="preserve_userdata_desc">Keep existing userdata when updating DSU</string>
+
+    <!-- Shared files -->
+    <string name="shared_files">Shared files</string>
+    <string name="shared_files_description">Import files into DSU shared storage or browse files from installed DSU images.</string>
+    <string name="import_file">Import</string>
+    <string name="import_shared_files">Import shared files?</string>
+    <string name="import_shared_files_description">The selected %1$s files will be copied to /sdcard/dsu_shared in DSU. Existing files with the same name will be replaced.</string>
+    <string name="dsu_file_roots">DSU file roots</string>
+    <string name="dsu_files">DSU files</string>
+    <string name="no_dsu_files">No files found.</string>
+    <string name="no_browsable_dsu_images">No browsable DSU images found.</string>
+    <string name="dsu_userdata_image_not_found">DSU userdata image was not found.</string>
+    <string name="dsu_userdata_offline_unavailable">DSU user data cannot be accessed from the default system. Boot into DSU once, complete setup, then return to the default system and try again.</string>
+    <string name="privileged_service_unavailable">Privileged service is unavailable.</string>
+    <string name="dsu_image_requires_root_or_system">Root or system mode is required.</string>
+    <string name="no_installed_dsu_prefix_found">No installed DSU prefix was found.</string>
+    <string name="unable_to_open_input_file">Unable to open input file: %1$s</string>
+    <string name="unable_to_open_output_file">Unable to open output file.</string>
+    <string name="unable_to_open_image_file">Unable to open image file.</string>
+    <string name="unable_to_open_output_image_file">Unable to open output image file.</string>
+    <string name="parent_directory">Parent directory</string>
+    <string name="directory">Directory</string>
+    <string name="file_size_bytes">%1$d bytes</string>
+    <string name="export_dsu_file">Export file</string>
 
     <!-- Image size card -->
     <string name="image_size">Image size</string>

@@ -36,6 +36,7 @@ class ImagesViewModel @Inject constructor(
 
     private var pendingNewImageUri: Uri = Uri.EMPTY
     private var pendingReplacementUri: Uri = Uri.EMPTY
+    private var pendingImportUris: List<Uri> = emptyList()
 
     init {
         refreshImages()
@@ -46,7 +47,7 @@ class ImagesViewModel @Inject constructor(
             _uiState.update {
                 it.copy(
                     operationState = ImagesOperationState.ERROR,
-                    errorText = "Root or system mode is required.",
+                    errorText = application.getString(R.string.dsu_image_requires_root_or_system),
                 )
             }
             return
@@ -58,7 +59,7 @@ class ImagesViewModel @Inject constructor(
                 _uiState.update {
                     it.copy(
                         operationState = ImagesOperationState.ERROR,
-                        errorText = "Privileged service unavailable.",
+                        errorText = application.getString(R.string.privileged_service_unavailable),
                     )
                 }
             },
@@ -71,22 +72,188 @@ class ImagesViewModel @Inject constructor(
                     }
                 }.getOrDefault(emptyList())
             }.distinctBy { "${it.prefix}/${it.name}" }
+            val fileRoots = images.toDsuFileRoots()
+            val currentRoot = uiState.value.currentFileRoot
+                .takeIf { root -> fileRoots.any { it.id == root } }
+                ?: fileRoots.firstOrNull()?.id
+                ?: ""
 
             _uiState.update {
                 it.copy(
                     images = images,
+                    dsuFileRoots = fileRoots,
                     availablePrefixes = prefixes,
+                    currentFileRoot = currentRoot,
+                    currentFilePath = if (currentRoot.isEmpty()) "" else it.currentFilePath,
+                    dsuFiles = if (currentRoot.isEmpty()) emptyList() else it.dsuFiles,
                     operationState = ImagesOperationState.IDLE,
+                    errorText = "",
+                )
+            }
+            if (currentRoot.isNotEmpty()) {
+                refreshDsuFiles()
+            }
+        }
+    }
+
+    fun refreshDsuFiles() {
+        if (!session.isRoot()) {
+            return
+        }
+
+        if (uiState.value.currentFileRoot.isEmpty()) {
+            _uiState.update {
+                it.copy(
+                    dsuFiles = emptyList(),
+                    operationState = ImagesOperationState.IDLE,
+                    dsuFileErrorText = application.getString(R.string.no_browsable_dsu_images),
+                )
+            }
+            return
+        }
+
+        _uiState.update {
+            it.copy(
+                operationState = ImagesOperationState.LOADING_FILES,
+                dsuFileErrorText = "",
+            )
+        }
+        PrivilegedProvider.run(
+            onFail = {
+                _uiState.update {
+                    it.copy(
+                        operationState = ImagesOperationState.IDLE,
+                        dsuFileErrorText = application.getString(R.string.privileged_service_unavailable),
+                    )
+                }
+            },
+        ) {
+            val root = uiState.value.currentFileRoot
+            val path = uiState.value.currentFilePath
+            val result = listDsuFiles(root, path)
+            val error = result.firstOrNull()?.takeIf { it.startsWith("E\t") }
+            if (error != null) {
+                _uiState.update {
+                    it.copy(
+                        dsuFiles = emptyList(),
+                        operationState = ImagesOperationState.IDLE,
+                        dsuFileErrorText = error.removePrefix("E\t").toDsuFileErrorText(),
+                    )
+                }
+                return@run
+            }
+
+            _uiState.update {
+                it.copy(
+                    dsuFiles = result.mapNotNull { line -> line.toDsuFileState(root, path) },
+                    operationState = ImagesOperationState.IDLE,
+                    dsuFileErrorText = "",
                     errorText = "",
                 )
             }
         }
     }
 
+    fun openDsuFileRoot(root: String) {
+        _uiState.update {
+            it.copy(
+                currentFileRoot = root,
+                currentFilePath = "",
+                dsuFiles = emptyList(),
+            )
+        }
+        refreshDsuFiles()
+    }
+
+    fun openDsuDirectory(file: DsuFileState) {
+        if (!file.isDirectory) return
+        _uiState.update {
+            it.copy(
+                currentFileRoot = file.root,
+                currentFilePath = file.path,
+                dsuFiles = emptyList(),
+            )
+        }
+        refreshDsuFiles()
+    }
+
+    fun openParentDsuDirectory() {
+        val currentPath = uiState.value.currentFilePath
+        if (currentPath.isEmpty()) return
+        _uiState.update {
+            it.copy(
+                currentFilePath = currentPath.substringBeforeLast("/", ""),
+                dsuFiles = emptyList(),
+            )
+        }
+        refreshDsuFiles()
+    }
+
+    fun onSharedImportSelectionResult(uris: List<Uri>) {
+        if (uris.isEmpty()) return
+        pendingImportUris = uris
+        _uiState.update {
+            it.copy(
+                pendingImportFilenames = uris.map { uri ->
+                    FilenameUtils.queryName(application.contentResolver, uri)
+                },
+                sheetDisplay = ImagesSheetDisplayState.CONFIRM_IMPORT_SHARED_FILES,
+                errorText = "",
+            )
+        }
+    }
+
+    fun confirmImportSharedFiles() {
+        val uris = pendingImportUris
+        if (uris.isEmpty()) return
+
+        dismissSheet(clearPendingSelection = false)
+        _uiState.update {
+            it.copy(
+                operationState = ImagesOperationState.IMPORTING,
+                currentImageName = uris.size.toString(),
+                errorText = "",
+            )
+        }
+
+        viewModelScope.launch(Dispatchers.IO) {
+            importSharedFiles(uris)
+        }
+    }
+
+    fun onClickExportDsuFile(file: DsuFileState) {
+        if (file.isDirectory) return
+        _uiState.update {
+            it.copy(
+                pendingDsuFile = file,
+                errorText = "",
+            )
+        }
+    }
+
+    fun onDsuFileExportSelectionResult(uri: Uri) {
+        val file = uiState.value.pendingDsuFile ?: return
+        _uiState.update {
+            it.copy(
+                operationState = ImagesOperationState.EXPORTING,
+                currentImageName = file.name,
+                errorText = "",
+            )
+        }
+        viewModelScope.launch(Dispatchers.IO) {
+            val fd = application.contentResolver.openFileDescriptor(uri, "wt")
+            if (fd == null) {
+                onImageOperationError(application.getString(R.string.unable_to_open_output_file))
+                return@launch
+            }
+            exportDsuSharedFile(file, fd)
+        }
+    }
+
     fun onClickAddImage(): Boolean {
         val prefix = getDefaultImagePrefix()
         if (prefix.isBlank()) {
-            onImageOperationError("No installed DSU prefix found.")
+            onImageOperationError(application.getString(R.string.no_installed_dsu_prefix_found))
             return false
         }
         _uiState.update {
@@ -153,7 +320,7 @@ class ImagesViewModel @Inject constructor(
             val imageSize = storageManager.getFilesizeFromUri(uri)
             val fd = application.contentResolver.openFileDescriptor(uri, "r")
             if (fd == null) {
-                onImageOperationError("Unable to open image file.")
+                onImageOperationError(application.getString(R.string.unable_to_open_image_file))
                 return@launch
             }
             addImage(prefix, imageName, fd, imageSize)
@@ -209,7 +376,7 @@ class ImagesViewModel @Inject constructor(
         viewModelScope.launch(Dispatchers.IO) {
             val fd = application.contentResolver.openFileDescriptor(uri, "wt")
             if (fd == null) {
-                onImageOperationError("Unable to open output image file.")
+                onImageOperationError(application.getString(R.string.unable_to_open_output_image_file))
                 return@launch
             }
             exportImage(image, fd)
@@ -233,7 +400,7 @@ class ImagesViewModel @Inject constructor(
             val imageSize = storageManager.getFilesizeFromUri(uri)
             val fd = application.contentResolver.openFileDescriptor(uri, "r")
             if (fd == null) {
-                onImageOperationError("Unable to open image file.")
+                onImageOperationError(application.getString(R.string.unable_to_open_image_file))
                 return@launch
             }
             replaceImage(image, fd, imageSize)
@@ -247,7 +414,7 @@ class ImagesViewModel @Inject constructor(
         PrivilegedProvider.run(
             onFail = {
                 fd.close()
-                onImageOperationError("Privileged service unavailable.")
+                onImageOperationError(application.getString(R.string.privileged_service_unavailable))
             },
         ) {
             val error = try {
@@ -278,7 +445,7 @@ class ImagesViewModel @Inject constructor(
         PrivilegedProvider.run(
             onFail = {
                 fd.close()
-                onImageOperationError("Privileged service unavailable.")
+                onImageOperationError(application.getString(R.string.privileged_service_unavailable))
             },
         ) {
             val error = try {
@@ -303,7 +470,7 @@ class ImagesViewModel @Inject constructor(
         PrivilegedProvider.run(
             onFail = {
                 fd.close()
-                onImageOperationError("Privileged service unavailable.")
+                onImageOperationError(application.getString(R.string.privileged_service_unavailable))
             },
         ) {
             val error = try {
@@ -314,6 +481,67 @@ class ImagesViewModel @Inject constructor(
             if (error.isEmpty()) {
                 clearPendingSelection()
                 refreshImages()
+            } else {
+                onImageOperationError(error)
+            }
+        }
+    }
+
+    private fun importSharedFiles(uris: List<Uri>) {
+        val sharedRoot = uiState.value.dsuFileRoots.firstOrNull { it.isSharedStorage }
+        if (sharedRoot == null) {
+            _uiState.update {
+                it.copy(
+                    operationState = ImagesOperationState.IDLE,
+                    dsuFileErrorText = application.getString(R.string.dsu_userdata_image_not_found),
+                )
+            }
+            return
+        }
+
+        PrivilegedProvider.run(
+            onFail = { onImageOperationError(application.getString(R.string.privileged_service_unavailable)) },
+        ) {
+            for (uri in uris) {
+                val filename = FilenameUtils.queryName(application.contentResolver, uri)
+                val fileSize = storageManager.getFilesizeFromUri(uri)
+                val fd = application.contentResolver.openFileDescriptor(uri, "r")
+                if (fd == null) {
+                    onImageOperationError(
+                        application.getString(R.string.unable_to_open_input_file, filename),
+                    )
+                    return@run
+                }
+                val error = importFileToDsuShared(sharedRoot.id, fd, filename, fileSize, true)
+                if (error.isNotEmpty()) {
+                    onImageOperationError(error.toDsuFileErrorText())
+                    return@run
+                }
+            }
+            clearPendingSelection()
+            refreshDsuFiles()
+        }
+    }
+
+    private fun exportDsuSharedFile(
+        file: DsuFileState,
+        fd: ParcelFileDescriptor,
+    ) {
+        PrivilegedProvider.run(
+            onFail = {
+                fd.close()
+                onImageOperationError(application.getString(R.string.privileged_service_unavailable))
+            },
+        ) {
+            val error = exportDsuFile(file.root, file.path, fd)
+            if (error.isEmpty()) {
+                clearPendingSelection()
+                _uiState.update {
+                    it.copy(
+                        operationState = ImagesOperationState.IDLE,
+                        errorText = "",
+                    )
+                }
             } else {
                 onImageOperationError(error)
             }
@@ -353,7 +581,7 @@ class ImagesViewModel @Inject constructor(
             )
         }
         PrivilegedProvider.run(
-            onFail = { onImageOperationError("Privileged service unavailable.") },
+            onFail = { onImageOperationError(application.getString(R.string.privileged_service_unavailable)) },
         ) {
             val error = deleteDsuBackingImage(image.prefix, image.name)
             if (error.isEmpty()) {
@@ -378,12 +606,15 @@ class ImagesViewModel @Inject constructor(
     private fun clearPendingSelection() {
         pendingNewImageUri = Uri.EMPTY
         pendingReplacementUri = Uri.EMPTY
+        pendingImportUris = emptyList()
         _uiState.update {
             it.copy(
                 pendingImage = null,
+                pendingDsuFile = null,
                 pendingPrefix = "",
                 newImageName = "",
                 newImageNameError = false,
+                pendingImportFilenames = emptyList(),
                 replacementFileName = "",
             )
         }
@@ -432,7 +663,66 @@ class ImagesViewModel @Inject constructor(
         return if (prefix.isEmpty()) "" else "$prefix/"
     }
 
+    private fun String.toDsuFileState(root: String, parentPath: String): DsuFileState? {
+        val parts = split("\t")
+        if (parts.size < 3) return null
+
+        val name = parts[1]
+        val path = listOf(parentPath, name)
+            .filter { it.isNotEmpty() }
+            .joinToString("/")
+
+        return DsuFileState(
+            root = root,
+            path = path,
+            name = name,
+            isDirectory = parts[0] == "D",
+            size = parts[2].toLongOrNull() ?: 0L,
+        )
+    }
+
+    private fun List<DsuImageState>.toDsuFileRoots(): List<DsuFileRootState> {
+        return flatMap { image ->
+            if (image.name.normalizedDsuPartitionName() == "userdata") {
+                listOf(
+                    DsuFileRootState(
+                        id = image.toRootId("media/0"),
+                        label = "/sdcard",
+                        isSharedStorage = true,
+                    ),
+                )
+            } else {
+                listOf(
+                    DsuFileRootState(
+                        id = image.toRootId(""),
+                        label = "/${image.name}",
+                    ),
+                )
+            }
+        }.distinctBy { it.id }
+    }
+
+    private fun DsuImageState.toRootId(relativeRoot: String): String {
+        return "$prefix\t$name\t$relativeRoot"
+    }
+
+    private fun String.toDsuFileErrorText(): String {
+        return when (this) {
+            ERROR_DSU_USERDATA_OFFLINE_UNAVAILABLE ->
+                application.getString(R.string.dsu_userdata_offline_unavailable)
+
+            else -> this
+        }
+    }
+
+    private fun String.normalizedDsuPartitionName(): String {
+        return removeSuffix(".img")
+            .removeSuffix("_gsi")
+            .lowercase()
+    }
+
     private companion object {
         val IMAGE_NAME_REGEX = Regex("[A-Za-z0-9_.-]+")
+        const val ERROR_DSU_USERDATA_OFFLINE_UNAVAILABLE = "DSU_USERDATA_OFFLINE_UNAVAILABLE"
     }
 }

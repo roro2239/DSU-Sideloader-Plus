@@ -21,3 +21,26 @@ fun launcherAcResult(
         }
     }
 }
+
+@Composable
+fun launcherAcResultMulti(
+    result: (List<Uri>) -> Unit,
+): ManagedActivityResultLauncher<Intent, ActivityResult> {
+    return rememberLauncherForActivityResult(
+        ActivityResultContracts.StartActivityForResult(),
+    ) {
+        if (it.resultCode == Activity.RESULT_OK) {
+            val data = it.data ?: return@rememberLauncherForActivityResult
+            val clipData = data.clipData
+            if (clipData != null) {
+                result(
+                    List(clipData.itemCount) { index ->
+                        clipData.getItemAt(index).uri
+                    },
+                )
+                return@rememberLauncherForActivityResult
+            }
+            data.data?.let { uri -> result(listOf(uri)) }
+        }
+    }
+}

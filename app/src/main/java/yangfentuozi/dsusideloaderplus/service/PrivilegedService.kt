@@ -413,6 +413,85 @@ class PrivilegedService : IPrivilegedService.Stub() {
         }
     }
 
+    override fun listDsuFiles(root: String?, path: String?): List<String> {
+        return runCatching {
+            withMountedDsuRoot(root, true) { mountPoint, relativeRoot ->
+                val directory = resolveMountedPath(mountPoint, relativeRoot, path.orEmpty())
+                if (!directory.exists()) {
+                    return@withMountedDsuRoot emptyList()
+                }
+                require(directory.isDirectory) { "Path is not a directory: ${path.orEmpty()}" }
+
+                directory.listFiles()
+                    .orEmpty()
+                    .sortedWith(compareBy<File> { !it.isDirectory }.thenBy { it.name.lowercase() })
+                    .map {
+                        val type = if (it.isDirectory) "D" else "F"
+                        "$type\t${it.name}\t${it.length()}"
+                    }
+            }
+        }.getOrElse {
+            Log.e(BuildConfig.APPLICATION_ID, it.stackTraceToString())
+            listOf("E\t${it.message ?: it}")
+        }
+    }
+
+    override fun importFileToDsuShared(
+        root: String?,
+        fileFd: ParcelFileDescriptor?,
+        filename: String?,
+        fileSize: Long,
+        overwrite: Boolean,
+    ): String {
+        return runCatching {
+            requireNotNull(fileFd) { "input file fd is null" }
+            validateSharedFilename(filename)
+            require(fileSize >= 0) { "input file size is invalid: $fileSize" }
+
+            withMountedDsuRoot(root, false) { mountPoint, relativeRoot ->
+                val targetDirectory = resolveMountedPath(mountPoint, relativeRoot, SHARED_FOLDER_RELATIVE_PATH)
+                ensureDirectory(targetDirectory)
+
+                val targetFile = File(targetDirectory, filename!!)
+                require(overwrite || !targetFile.exists()) { "File already exists: $filename" }
+
+                copyFileToRegularFile(fileFd, targetFile, fileSize)
+                runCommand("/system/bin/chown", "1023:1023", targetFile.absolutePath)
+                runCommand("/system/bin/chmod", "0664", targetFile.absolutePath)
+            }
+            ""
+        }.getOrElse {
+            Log.e(BuildConfig.APPLICATION_ID, it.stackTraceToString())
+            it.message ?: it.toString()
+        }.also {
+            runCatching { fileFd?.close() }
+        }
+    }
+
+    override fun exportDsuFile(
+        root: String?,
+        path: String?,
+        fileFd: ParcelFileDescriptor?,
+    ): String {
+        return runCatching {
+            requireNotNull(fileFd) { "output file fd is null" }
+
+            withMountedDsuRoot(root, true) { mountPoint, relativeRoot ->
+                val sourceFile = resolveMountedPath(mountPoint, relativeRoot, path.orEmpty())
+                require(sourceFile.exists()) { "File not found: ${path.orEmpty()}" }
+                require(sourceFile.isFile) { "Path is not a file: ${path.orEmpty()}" }
+
+                copyRegularFileToFd(sourceFile, fileFd)
+            }
+            ""
+        }.getOrElse {
+            Log.e(BuildConfig.APPLICATION_ID, it.stackTraceToString())
+            it.message ?: it.toString()
+        }.also {
+            runCatching { fileFd?.close() }
+        }
+    }
+
     private fun deleteDsuBackingImage(
         imageService: IImageService,
         imageName: String,
@@ -485,6 +564,200 @@ class PrivilegedService : IPrivilegedService.Stub() {
         } finally {
             if (mapped) {
                 runCatching { imageService.unmapImageDevice(imageName) }
+            }
+        }
+    }
+
+    private fun <T> withMountedDsuRoot(
+        root: String?,
+        readOnly: Boolean,
+        operation: (File, String) -> T,
+    ): T {
+        requiresDynamicSystem()
+        require(!dynamicSystemService!!.isInUse) {
+            "DSU is running. Reboot to the default system before accessing files."
+        }
+
+        val dsuRoot = getDsuFileRoot(root)
+        val imageService = requiresGsiService().openImageService(dsuRoot.prefix)
+        require(imageService.backingImageExists(dsuRoot.imageName)) {
+            "DSU image not found: ${dsuRoot.imageName}"
+        }
+
+        if (imageService.isImageMapped(dsuRoot.imageName)) {
+            imageService.unmapImageDevice(dsuRoot.imageName)
+        }
+
+        var mapped = false
+        var mounted = false
+        try {
+            val mappedImage = MappedImage()
+            imageService.mapImageDevice(dsuRoot.imageName, IMAGE_SERVICE_WAIT_MS, mappedImage)
+            mapped = true
+
+            val mappedPath = mappedImage.path
+                ?: throw IllegalStateException("mapImageDevice(${dsuRoot.imageName}) returned empty path")
+            val mountPoint = File("$DSU_FILE_MOUNT_POINT/${dsuRoot.mountId}")
+            ensureDirectory(mountPoint)
+            mountImage(dsuRoot.imageName, mappedPath, mountPoint.absolutePath, readOnly)
+            mounted = true
+
+            return operation(mountPoint, dsuRoot.relativeRoot)
+        } finally {
+            if (mounted) {
+                runCatching { runCommand("/system/bin/umount", "$DSU_FILE_MOUNT_POINT/${dsuRoot.mountId}") }
+            }
+            if (mapped) {
+                runCatching { imageService.unmapImageDevice(dsuRoot.imageName) }
+            }
+        }
+    }
+
+    private fun mountImage(imageName: String, mappedPath: String, mountPoint: String, readOnly: Boolean) {
+        val mountOptions = if (readOnly) arrayOf("-o", "ro") else emptyArray()
+        val attempts = mutableListOf<String>()
+        val mounted = resolveMountSources(imageName, mappedPath).any { source ->
+            listOf("ext4", "f2fs").any { filesystem ->
+                val result = runCommandResult(
+                    "/system/bin/mount",
+                    "-t",
+                    filesystem,
+                    *mountOptions,
+                    source.path,
+                    mountPoint,
+                )
+                attempts += "${source.path}:$filesystem=$result"
+                result == 0
+            }
+        }
+        if (!mounted && imageName.normalizedPartitionName() == "userdata") {
+            throw IllegalStateException(ERROR_DSU_USERDATA_OFFLINE_UNAVAILABLE)
+        }
+        if (!mounted) {
+            throw IllegalStateException(
+                "Failed to mount DSU image: $imageName. attempts=${attempts.joinToString()}",
+            )
+        }
+    }
+
+    private fun resolveMountSources(imageName: String, mappedPath: String): List<MountSource> {
+        val mappedSource = MountSource(mappedPath, null)
+        val partitions = findPartitionMountSources(mappedPath)
+        val matchingPartitions = partitions.filter { it.matchesImageName(imageName) }
+        val fallbackPartitions = if (matchingPartitions.isEmpty() && partitions.size == 1) {
+            partitions
+        } else {
+            emptyList()
+        }
+
+        return (listOf(mappedSource) + matchingPartitions + fallbackPartitions)
+            .distinctBy { it.path }
+    }
+
+    private fun findPartitionMountSources(mappedPath: String): List<MountSource> {
+        val blockName = File(mappedPath).name
+        if (blockName.isEmpty()) return emptyList()
+
+        val sysBlock = File("/sys/class/block")
+        val childPartitions = File(sysBlock, blockName)
+            .listFiles()
+            .orEmpty()
+            .filter { it.isPartitionBlock(blockName) }
+        val siblingPartitions = sysBlock
+            .listFiles()
+            .orEmpty()
+            .filter { it.isPartitionBlock(blockName) }
+
+        return (childPartitions + siblingPartitions)
+            .distinctBy { it.name }
+            .map { partition ->
+                MountSource(
+                    path = "/dev/block/${partition.name}",
+                    partitionName = partition.readPartitionName(),
+                )
+            }
+    }
+
+    private fun File.isPartitionBlock(parentBlockName: String): Boolean {
+        return name.startsWith(parentBlockName) && File(this, "partition").exists()
+    }
+
+    private fun File.readPartitionName(): String? {
+        return File(this, "uevent")
+            .takeIf { it.exists() }
+            ?.readLines()
+            ?.firstOrNull { it.startsWith("PARTNAME=") }
+            ?.substringAfter("=")
+            ?.takeIf { it.isNotBlank() }
+    }
+
+    private fun MountSource.matchesImageName(imageName: String): Boolean {
+        val partition = partitionName ?: return false
+        return partition.normalizedPartitionName() == imageName.normalizedPartitionName()
+    }
+
+    private fun String.normalizedPartitionName(): String {
+        return removeSuffix(".img")
+            .removeSuffix("_gsi")
+            .lowercase()
+    }
+
+    private fun resolveMountedPath(mountPoint: File, relativeRoot: String, path: String): File {
+        val base = if (relativeRoot.isEmpty()) mountPoint else File(mountPoint, relativeRoot)
+        val normalizedPath = path.trim('/').replace('\\', '/')
+        require(!normalizedPath.split('/').any { it == ".." }) {
+            "Path must not contain '..': $path"
+        }
+
+        val resolved = if (normalizedPath.isEmpty()) base else File(base, normalizedPath)
+        val basePath = base.canonicalPath
+        val resolvedPath = resolved.canonicalPath
+        require(resolvedPath == basePath || resolvedPath.startsWith("$basePath/")) {
+            "Path escapes DSU root: $path"
+        }
+        return resolved
+    }
+
+    private fun copyFileToRegularFile(
+        fileFd: ParcelFileDescriptor,
+        targetFile: File,
+        fileSize: Long,
+    ) {
+        val buffer = ByteArray(4 * 1024 * 1024)
+        var copied = 0L
+        ParcelFileDescriptor.AutoCloseInputStream(fileFd).use { input ->
+            FileOutputStream(targetFile).use { output ->
+                while (true) {
+                    val read = input.read(buffer)
+                    if (read < 0) {
+                        break
+                    }
+                    output.write(buffer, 0, read)
+                    copied += read.toLong()
+                }
+                output.fd.sync()
+            }
+        }
+        if (copied != fileSize) {
+            throw IllegalStateException("short copy: copied $copied of $fileSize")
+        }
+    }
+
+    private fun copyRegularFileToFd(
+        sourceFile: File,
+        fileFd: ParcelFileDescriptor,
+    ) {
+        val buffer = ByteArray(4 * 1024 * 1024)
+        FileInputStream(sourceFile).use { input ->
+            ParcelFileDescriptor.AutoCloseOutputStream(fileFd).use { output ->
+                while (true) {
+                    val read = input.read(buffer)
+                    if (read < 0) {
+                        break
+                    }
+                    output.write(buffer, 0, read)
+                }
+                output.fd.sync()
             }
         }
     }
@@ -601,6 +874,13 @@ class PrivilegedService : IPrivilegedService.Stub() {
         }
     }
 
+    private fun validateSharedFilename(filename: String?) {
+        require(!filename.isNullOrBlank()) { "filename must not be empty" }
+        require(!filename.contains("/") && !filename.contains("\\") && !filename.contains("..")) {
+            "filename must not contain path separators or '..': $filename"
+        }
+    }
+
     private fun ensureGsiServiceDirectory(path: String) {
         val directory = File(path)
         if (!directory.exists() && !directory.mkdirs()) {
@@ -610,17 +890,89 @@ class PrivilegedService : IPrivilegedService.Stub() {
         runCommand("/system/bin/restorecon", "-R", path)
     }
 
+    private fun ensureDirectory(directory: File) {
+        if (!directory.exists() && !directory.mkdirs()) {
+            throw IllegalStateException("failed to create ${directory.absolutePath}")
+        }
+    }
+
     private fun runCommand(vararg command: String) {
-        val result = ProcessBuilder(*command)
-            .redirectErrorStream(true)
-            .start()
-            .waitFor()
+        val result = runCommandResult(*command)
         if (result != 0) {
             throw IllegalStateException("command failed ($result): ${command.joinToString(" ")}")
         }
     }
 
+    private fun runCommandResult(vararg command: String): Int {
+        return ProcessBuilder(*command)
+            .redirectErrorStream(true)
+            .start()
+            .waitFor()
+    }
+
+    private fun getDefaultDsuImagePrefix(): String {
+        runCatching { getInstalledGsiImageDir().toDsuImagePrefix() }
+            .getOrNull()
+            ?.takeIf { it.isNotEmpty() }
+            ?.let { return it }
+
+        val slots = runCatching { getInstalledDsuSlots() }.getOrDefault(emptyList())
+        if (slots.isNotEmpty()) {
+            return "${slots.first()}/${slots.first()}/"
+        }
+
+        val activeSlot = runCatching { getActiveDsuSlot() }.getOrDefault("")
+        if (activeSlot.isNotEmpty()) {
+            return "$activeSlot/$activeSlot/"
+        }
+
+        return "dsu/dsu/"
+    }
+
+    private fun String.toDsuImagePrefix(): String {
+        val prefix = removePrefix("/metadata/gsi/")
+            .removePrefix("/data/gsi/")
+            .trim('/')
+        return if (prefix.isEmpty()) "" else "$prefix/"
+    }
+
+    private fun getDsuFileRoot(root: String?): DsuFileRoot {
+        val parts = root.orEmpty().split("\t", limit = 3)
+        require(parts.size >= 2) { "Invalid DSU file root." }
+
+        val prefix = parts[0]
+        val imageName = parts[1]
+        val relativeRoot = parts.getOrNull(2).orEmpty()
+        validateGsiPrefix(prefix)
+        validateGsiImageName(imageName)
+        require(!relativeRoot.split('/').any { it == ".." }) {
+            "relative root must not contain '..': $relativeRoot"
+        }
+
+        return DsuFileRoot(
+            prefix = prefix,
+            imageName = imageName,
+            relativeRoot = relativeRoot.trim('/'),
+            mountId = "${imageName}_${prefix.hashCode()}",
+        )
+    }
+
+    private data class DsuFileRoot(
+        val prefix: String,
+        val imageName: String,
+        val relativeRoot: String,
+        val mountId: String,
+    )
+
+    private data class MountSource(
+        val path: String,
+        val partitionName: String?,
+    )
+
     private companion object {
         const val IMAGE_SERVICE_WAIT_MS = 10_000
+        const val DSU_FILE_MOUNT_POINT = "/data/local/tmp/dsusideloaderplus_dsu_file"
+        const val SHARED_FOLDER_RELATIVE_PATH = "dsu_shared"
+        const val ERROR_DSU_USERDATA_OFFLINE_UNAVAILABLE = "DSU_USERDATA_OFFLINE_UNAVAILABLE"
     }
 }
